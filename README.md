@@ -30,8 +30,8 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 ## Functions (API)
 * [`Meeo.begin(nameSpace, accessKey,[wifiSsid],[wifiPassword])`](#function-begin)
 * [`Meeo.run()`](#function-run)
-* [`Meeo.setEventHandler(void ( * f)(MeeoEventType))`](#function-seteventhandler)
-* [`Meeo.setDataReceivedHandler(void ( * f)(topic,payload,payloadLength))`](#function-setdatareceivedhandler)
+* [`Meeo.setEventHandler(void (*f)(MeeoEventType))`](#function-seteventhandler)
+* [`Meeo.setDataReceivedHandler(void (*f)(topic,payload,payloadLength))`](#function-setdatareceivedhandler)
 
 -------------------------------------------------------
 <a name="function-begin"></a>
@@ -115,7 +115,7 @@ void meeoEventHandler(MeeoEventType eventType){
 ```
 -------------------------------------------------------
 <a name="function-setdatareceivedhandler"></a>
-### `Meeo.setDataReceivedHandler(void ( * f)(char* topic, byte* payload, unsigned int payloadLength))`
+### `Meeo.setDataReceivedHandler(void (*f)(char* topic, byte* payload, unsigned int payloadLength))`
 Sets the function callback to be triggered once there are available data from the server. The function expects data from topics registered via `subscribe()` calls. 
 
 Parameters are
