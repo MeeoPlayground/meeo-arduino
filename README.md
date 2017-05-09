@@ -28,15 +28,17 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [Crowtail NodeMCU Driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 
 ## Functions (API)
-* [`Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`](#function-begin)
+* [`Meeo.begin(nameSpace, accessKey,[wifiSsid],[wifiPassword])`](#function-begin)
 * [`Meeo.run()`](#function-run)
+* [`Meeo.setEventHandler(void ( * f)(MeeoEventType))`](#function-seteventhandler)
+* [`Meeo.setDataReceivedHandler(void ( * f)(topic,payload,payloadLength))`](#function-setdatareceivedhandler)
 
 -------------------------------------------------------
 <a name="function-begin"></a>
-### `Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`
-Connects to Meeo. To get your `namespace` and `access_key`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
+### `Meeo.begin(nameSpace, accessKey,[wifiSsid],[wifiPassword])`
+Connects to Meeo. To get your `nameSpace` and `accessKey`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
 
-To use WiFi, provide your wifi networks' SSID (`wifi_ssid`) and password (`wifi_password`). The library will automatically handles the WiFi connectivity. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided, it will try to run as SoftAP (Hotspot) where the credentials can be set via REST calls. Check [Running on SoftAP mode](#softap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
+To use WiFi, provide your wifi networks' SSID (`wifiSsid`) and password (`wifiPassword`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, it will try to run in **AP Mode**(Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
 This function will return `true` for a successful initialization/connection, `false` otherwise. Enable [debug mode](#debug-mode) to see detailed logs.
 
@@ -44,7 +46,7 @@ Example:
 ```c++
 void setup(){
   Serial.begin(115200);
-  if( !Meeo.begin("my_namespace","my_access_key","OpenWiFi","qwerty123")) {
+  if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
     Serial.println("Can't connect to Meeo servers");
   }
   // YOUR CODE HERE
@@ -52,7 +54,6 @@ void setup(){
 }
 ```
 -------------------------------------------------------
-
 <a name="function-run"></a>
 ### `Meeo.run()`
 In most cases, Arduinos run on a single thread thus new data coming from Meeo are buffered before getting processed. Add this inside `loop()` function to monitor data changes from Meeo. Example:
@@ -64,9 +65,104 @@ void loop() {
   // ...
 }
 ```
+-------------------------------------------------------
+<a name="function-seteventhandler"></a>
+### `Meeo.setEventHandler(void (*f)(MeeoEventType))`
+Sets the handler of generic events coming from the subsystem. This is useful if you want to handle system status changes such WiFi connectivity process. **IMPORTANT NOTE:** Set the handler before calling `begin()`; `begin()` function triggers several events relevant to initialization.
+
+`MeeoEventType` is an enum and the available values are:
+* `WIFI_CONNECTING`
+* `WIFI_CONNECTED`
+* `WIFI_DISCONNECTED`
+* `MQ_CONNECTED`
+* `MQ_DISCONNECTED`
+* `MQ_BAD_CREDENTIALS`
+* `MQ_ERROR`
+* `AP_MODE`
+
+
+Example:
+```c++
+void setup(){
+  Serial.begin(115200);
+
+  Meeo.setEventHandler(meeoEventHandler);
+  if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
+    Serial.println("Can't connect to Meeo servers");
+  }
+  // YOUR CODE HERE
+  // ...
+}
+
+...
+
+void meeoEventHandler(MeeoEventType eventType){
+  switch (eventType) {
+    case WIFI_CONNECTED:
+      Serial.println("Connected to WiFi");
+      break;
+    case MQ_CONNECTED:
+      Serial.println("Operations are all green!");
+      Uttr.subscribe(channel);
+      break;
+    case AP_MODE:
+      Serial.println("Running in AP Mode");
+      break;
+    default:
+      break;
+  }
+}
+```
+-------------------------------------------------------
+<a name="function-setdatareceivedhandler"></a>
+### `Meeo.setDataReceivedHandler(void ( * f)(char* topic, byte* payload, unsigned int payloadLength))`
+Sets the function callback to be triggered once there are available data from the server. The function expects data from topics registered via `subscribe()` calls. 
+
+Parameters are
+* `topic` - raw MQTT topic source of the data; 
+* `payload` - data payload in byte format. To convert to String, you can use `Meeo.convertToString()` function.
+* `payloadLength` - the number of bytes received
+
+To compare raw MQTT topics to channel, use `Meeo.isChannelMatched(rawTopic,channel)`. This function returns `true` if the `channel` prepended with the `nameSpace` provided during `begin()` is equal to `rawTopic`; `false` otherwise.
+
+
+Example:
+```c++
+void setup(){
+  Serial.begin(115200);
+
+
+  Meeo.setEventHandler(meeoEventHandler);
+  Meeo.setDataReceivedHandler(meeoDataReceivedHandler);
+  if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
+    Serial.println("Can't connect to Meeo servers");
+  }
+  // YOUR CODE HERE
+  // ...
+}
+
+...
+
+void meeoDataReceivedHandler(char* topic, byte* payload, unsigned int payloadLength) {
+  String sTopic = Meeo.convertToString(topic);
+  String sPayload = Meeo.convertToString(payload, payloadLength);
+  Serial.print(sTopic);
+  Serial.print(": ");
+  Serial.println(sPayload);
+
+  if (Meeo.isChannelMatched(sTopic, "kitchen-lights")) {
+      if (sPayload.toInt() == 1) {
+          digitalWrite(BULB_RELAY, HIGH);
+      } else {
+          digitalWrite(BULB_RELAY, LOW);
+      }
+  }
+}
+```
 
 <a name="debug-mode"></a>
 ## Enabling debug mode
 
-<a name="softap-mode"></a>
-## Running on SoftAP mode
+<a name="ap-mode"></a>
+## Running in AP mode
+
