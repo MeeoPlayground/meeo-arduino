@@ -31,9 +31,12 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 ### `Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`
 Connects to Meeo. To get your `namespace` and `access_key`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
 
-For ESP8266-based boards, you can provide your wifi networks' SSID (`wifi_ssid`) and password (`wifi_password`). The library will automatically handles the WiFi connectivity.
+To use WiFi, provide your wifi networks' SSID (`wifi_ssid`) and password (`wifi_password`). The library will automatically handles the WiFi connectivity. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided, it will try to run as SoftAP (Hotspot) where the credentials can be set via REST calls. Check our guide [here](#softap-mode) for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
 This function will return `true` for a successful initialization/connection, `false` otherwise. Enable [debug mode](#debug-mode) to see detailed logs.
 
 <a name="debug-mode"></a>
 ## Enabling debug mode
+
+<a name="softap-mode"></a>
+## Running on SoftAP mode
