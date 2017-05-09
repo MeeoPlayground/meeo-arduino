@@ -29,7 +29,7 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 
 ## Functions (API)
 * [`Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`](#function-begin)
-* [`Meeo.monitor()`](#function-monitor)
+* [`Meeo.run()`](#function-run)
 
 -------------------------------------------------------
 <a name="function-begin"></a>
@@ -46,7 +46,6 @@ void setup(){
   Serial.begin(115200);
   if( !Meeo.begin("my_namespace","my_access_key","OpenWiFi","qwerty123")) {
     Serial.println("Can't connect to Meeo servers");
-    while(1); //Do not proceed
   }
   // YOUR CODE HERE
   // ...
@@ -54,12 +53,12 @@ void setup(){
 ```
 -------------------------------------------------------
 
-<a name="function-monitor"></a>
-### `Meeo.monitor()`
+<a name="function-run"></a>
+### `Meeo.run()`
 In most cases, Arduinos run on a single thread thus new data coming from Meeo are buffered before getting processed. Add this inside `loop()` function to monitor data changes from Meeo. Example:
 ```c++
 void loop() {
-  Meeo.monitor();
+  Meeo.run();
   
   // YOUR CODE HERE
   // ...
