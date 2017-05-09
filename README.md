@@ -28,12 +28,41 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [Crowtail NodeMCU Driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 
 ## Functions (API)
+* [`Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`](#function-begin)
+* [`Meeo.monitor()`](#function-monitor)
+
+<a name="function-begin"></a>
 ### `Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`
 Connects to Meeo. To get your `namespace` and `access_key`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
 
 To use WiFi, provide your wifi networks' SSID (`wifi_ssid`) and password (`wifi_password`). The library will automatically handles the WiFi connectivity. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided, it will try to run as SoftAP (Hotspot) where the credentials can be set via REST calls. Check [Running on SoftAP mode](#softap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
 This function will return `true` for a successful initialization/connection, `false` otherwise. Enable [debug mode](#debug-mode) to see detailed logs.
+
+Example:
+```c++
+void setup(){
+  Serial.begin(115200);
+  if( !Meeo.begin("my_namespace","my_access_key","OpenWiFi","qwerty123")) {
+    Serial.println("Can't connect to Meeo servers");
+    while(1); //Do not proceed
+  }
+  // YOUR CODE HERE
+  // ...
+}
+```
+
+<a name="function-monitor"></a>
+### `Meeo.monitor()`
+In most cases, Arduinos run on a single thread thus new data coming from Meeo are buffered before getting processed. Add this inside `loop()` function to monitor data changes from Meeo. Example:
+```c++
+void loop() {
+  Meeo.monitor();
+  
+  // YOUR CODE HERE
+  // ...
+}
+```
 
 <a name="debug-mode"></a>
 ## Enabling debug mode
