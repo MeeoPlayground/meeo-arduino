@@ -31,6 +31,7 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [`Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`](#function-begin)
 * [`Meeo.monitor()`](#function-monitor)
 
+-------------------------------------------------------
 <a name="function-begin"></a>
 ### `Meeo.begin(namespace, access_key,[wifi_ssid],[wifi_password])`
 Connects to Meeo. To get your `namespace` and `access_key`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
@@ -51,6 +52,7 @@ void setup(){
   // ...
 }
 ```
+-------------------------------------------------------
 
 <a name="function-monitor"></a>
 ### `Meeo.monitor()`
