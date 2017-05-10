@@ -29,16 +29,18 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 
 ## Functions (API)
 * [`Meeo.begin(nameSpace, accessKey,[wifiSsid],[wifiPassword])`](#function-begin)
+* [`Meeo.begin(nameSpace, accessKey,client)`](#function-begin-1)
 * [`Meeo.run()`](#function-run)
 * [`Meeo.setEventHandler(void (*f)(MeeoEventType))`](#function-seteventhandler)
 * [`Meeo.setDataReceivedHandler(void (*f)(topic,payload,payloadLength))`](#function-setdatareceivedhandler)
 
+
 -------------------------------------------------------
 <a name="function-begin"></a>
-### `Meeo.begin(nameSpace, accessKey,[wifiSsid],[wifiPassword])`
+### `Meeo.begin(const char * nameSpace,const char * accessKey,[const char * wifiSsid],[const char * wifiPassword])`
 Connects to Meeo. To get your `nameSpace` and `accessKey`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
 
-To use WiFi, provide your wifi networks' SSID (`wifiSsid`) and password (`wifiPassword`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, it will try to run in **AP Mode**(Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
+To use WiFi, provide your wifi networks' SSID (`wifiSsid`) and password (`wifiPassword`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, this function will not return. Instead it will try to run the board in **AP Mode**(Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
 This function will return `true` for a successful initialization/connection, `false` otherwise. Enable [debug mode](#debug-mode) to see detailed logs.
 
@@ -47,6 +49,24 @@ Example:
 void setup(){
   Serial.begin(115200);
   if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
+    Serial.println("Can't connect to Meeo servers");
+  }
+  // YOUR CODE HERE
+  // ...
+}
+```
+-------------------------------------------------------
+<a name="function-begin-1"></a>
+### `Meeo.begin(const char * nameSpace,const char * accessKey,Client client)`
+To use a different means to connect to the internet, you can provide a [`Client`](https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/Client.h) instance instead. This is applicable for scenarios such using Arduino Yun board or Yun Shield with `YunClient` or Arduino Ethernet shield with `EthernetClient`. *NOTE* For Arduino Yun board or Yun Shield using `YunClient`, make sure to call `Bridge.begin()` first before calling `Meeo.begin()`.
+
+Example:
+```c++
+EthernetClient ethClient;
+void setup(){
+  Serial.begin(115200);
+  Ethernet.begin(mac, ip);
+  if( !Meeo.begin("my_namespace","my_access_key",ethClient)) {
     Serial.println("Can't connect to Meeo servers");
   }
   // YOUR CODE HERE
