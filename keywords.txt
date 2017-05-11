@@ -1,0 +1,25 @@
+#######################################
+# Data types (KEYWORD1)
+#######################################
+Meeo	KEYWORD1
+
+#######################################
+# Methods and Functions (KEYWORD2)
+#######################################
+begin	KEYWORD2
+run	KEYWORD2
+onEvent KEYWORD2
+stringToRGB KEYWORD2
+toString KEYWORD2
+isTopicEqual KEYWORD2
+
+# Handler helpers
+
+# Variables binding
+
+# Special defines
+
+
+#######################################
+# Literals (LITERAL1)
+#######################################
