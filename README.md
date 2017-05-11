@@ -33,6 +33,7 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [`Meeo.run()`](#function-run)
 * [`Meeo.setEventHandler(void (*f)(MeeoEventType))`](#function-seteventhandler)
 * [`Meeo.setDataReceivedHandler(void (*f)(topic,payload,payloadLength))`](#function-setdatareceivedhandler)
+* [`Meeo.subscribe(channel)`](#function-subscribe)
 
 
 -------------------------------------------------------
@@ -177,6 +178,25 @@ void meeoDataReceivedHandler(char* topic, byte* payload, unsigned int payloadLen
           digitalWrite(BULB_RELAY, LOW);
       }
   }
+}
+```
+-------------------------------------------------------
+<a name="function-subscribe"></a>
+#### `Meeo.subscribe(String channel)`
+Let's your device listen to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every subscribe). 
+
+Example: 
+```c++
+void setup() {
+
+  // MEEO INITIALIZATION HERE
+  
+  
+  Meeo.subscribe("kitchen-lights");
+  Meeo.subscribe("door-lock-state");
+  
+  // YOUR CODE HERE
+  // ...
 }
 ```
 
