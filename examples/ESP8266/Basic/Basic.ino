@@ -1,30 +1,37 @@
 #include <Meeo.h>
 
-const char * nameSpace = "tdf-b20hfmlb";
-const char * accessKey = "user_qVMRgrK4sQduDK6n";
-const char * channel = "door-lock-state";
+String nameSpace = "my_namespace";
+String accessKey = "my_access_key";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
+String channel = "my-channel";
+
+unsigned long previous = 0;
 
 void setup() {
   Serial.begin(115200);
 
-  Meeo.setEventHandler(eventHandler);
-  Meeo.setDataReceivedHandler(dataHandler);
-  Meeo.begin(nameSpace, accessKey, "CIRCUITROCKSLOL", "********");
+  Meeo.setEventHandler(meeoEventHandler);
+  Meeo.setDataReceivedHandler(meeoDataHandler);
+  Meeo.begin(nameSpace, accessKey, ssid, pass);
 }
 
 void loop() {
   Meeo.run();
+
+  if (millis() - previous >= 1000) {
+    previous = millis();
+    Meeo.publish(channel, String(previous));
+  }
 }
 
-void dataHandler(char* topic, byte* payload, unsigned int payloadLength) {
-  String sTopic = Meeo.convertToString(topic);
-  String sPayload = Meeo.convertToString(payload, payloadLength);
-  Serial.print(sTopic);
+void meeoDataHandler(String topic, String payload) {
+  Serial.print(topic);
   Serial.print(": ");
-  Serial.println(sPayload);
+  Serial.println(payload);
 }
 
-void eventHandler(MeeoEventType event) {
+void meeoEventHandler(MeeoEventType event) {
   switch (event) {
     case WIFI_DISCONNECTED:
       Serial.println("Not Connected to WiFi");
@@ -43,7 +50,8 @@ void eventHandler(MeeoEventType event) {
       Meeo.subscribe(channel);
       break;
     case MQ_BAD_CREDENTIALS:
-      Serial.println("Bad Creds");
+      Serial.println("Bad Credentials");
+      break;
     case AP_MODE:
       Serial.println("AP Mode");
       break;

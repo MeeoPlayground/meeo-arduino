@@ -1,4 +1,8 @@
 #######################################
+# Syntax Coloring Map For Meeo
+#######################################
+
+#######################################
 # Data types (KEYWORD1)
 #######################################
 Meeo	KEYWORD1
@@ -8,10 +12,11 @@ Meeo	KEYWORD1
 #######################################
 begin	KEYWORD2
 run	KEYWORD2
-onEvent KEYWORD2
-stringToRGB KEYWORD2
-toString KEYWORD2
-isTopicEqual KEYWORD2
+setEventHandler	KEYWORD2
+setDataReceivedHandler	KEYWORD2
+convertToString	KEYWORD2
+convertStringToRGB	KEYWORD2
+isChannelMatched	KEYWORD2
 
 # Handler helpers
 
@@ -23,3 +28,12 @@ isTopicEqual KEYWORD2
 #######################################
 # Literals (LITERAL1)
 #######################################
+MeeoEventType	LITERAL1
+WIFI_CONNECTING	LITERAL1
+WIFI_CONNECTED	LITERAL1
+WIFI_DISCONNECTED	LITERAL1
+MQ_CONNECTED	LITERAL1
+MQ_DISCONNECTED	LITERAL1
+MQ_BAD_CREDENTIALS	LITERAL1
+MQ_ERROR	LITERAL1
+AP_MODE	LITERAL1

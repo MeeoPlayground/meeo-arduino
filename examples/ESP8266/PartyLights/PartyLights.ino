@@ -1,19 +1,15 @@
-#include <Uttr.h>
+#include <Meeo.h>
 #include <Adafruit_NeoPixel.h>
 
 #define PIN D3
 #define NUMPIXELS 4
 
-unsigned long previous = 0;
-
-const char * ssid = "your-router-ssid";
-const char * pass = "your-router-password";
-const char * deviceId = "enter-any-unique-id";
-const char * username = "your-username";
-const char * accessKey = "your-access-key";
-const char * nameSpace = "your-name-space";
-const char * colorChannel = "your-color-channel";
-const char * speedChannel = "your-speed-channel";
+String nameSpace = "my_namespace";
+String accessKey = "my_access_key";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
+String colorChannel = "my-color-channel";
+String speedChannel = "my-speed-channel";
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int r, g, b;
@@ -24,9 +20,10 @@ unsigned long colorMillis;
 
 void setup() {
   Serial.begin(115200);
-  Uttr.onEvent(eventListener);
-  Uttr.begin(deviceId, username, accessKey, nameSpace, ssid, pass);
-  Uttr.setCallback(callback);
+
+  Meeo.setEventHandler(meeoEventHandler);
+  Meeo.setDataReceivedHandler(meeoDataHandler);
+  Meeo.begin(nameSpace, accessKey, ssid, pass);
 
   pixels.begin();
 
@@ -37,7 +34,7 @@ void setup() {
 }
 
 void loop() {
-  Uttr.run();
+  Meeo.run();
 
   unsigned long currentMillis = millis();
 
@@ -62,17 +59,45 @@ void loop() {
   if (pixelCount >= NUMPIXELS) pixelCount = 0;
 }
 
-void callback(char* topic, byte* payload, unsigned int payloadLength) {
-  String sTopic = Uttr.toString(topic);
-  String sPayload = Uttr.toString(payload, payloadLength);
-  Serial.print(sTopic);
+void meeoDataHandler(String topic, String payload) {
+  Serial.print(topic);
   Serial.print(": ");
-  Serial.println(sPayload);
+  Serial.println(payload);
 
-  if (Uttr.isTopicEqual(sTopic, colorChannel)) {
-    Uttr.stringToRGB(sPayload, &r, &g, &b);
-  } else if (Uttr.isTopicEqual(sTopic, speedChannel)) {
-    duration = sPayload.toInt();
+  if (Meeo.isChannelMatched(topic, colorChannel)) {
+    Meeo.convertStringToRGB(payload, &r, &g, &b);
+  } else if (Meeo.isChannelMatched(topic, speedChannel)) {
+    duration = payload.toInt();
+  }
+}
+
+void meeoEventHandler(MeeoEventType event) {
+  switch (event) {
+    case WIFI_DISCONNECTED:
+      Serial.println("Not Connected to WiFi");
+      break;
+    case WIFI_CONNECTING:
+      Serial.println("Connecting to WiFi");
+      break;
+    case WIFI_CONNECTED:
+      Serial.println("Connected to WiFi");
+      break;
+    case MQ_DISCONNECTED:
+      Serial.println("Not Connected to MQTT Server");
+      break;
+    case MQ_CONNECTED:
+      Serial.println("Connected to MQTT Server");
+      Meeo.subscribe(colorChannel);
+      Meeo.subscribe(speedChannel);
+      break;
+    case MQ_BAD_CREDENTIALS:
+      Serial.println("Bad Credentials");
+      break;
+    case AP_MODE:
+      Serial.println("AP Mode");
+      break;
+    default:
+      break;
   }
 }
 
@@ -84,31 +109,4 @@ void turnOffPixels(int ctr) {
     }
   }
   pixels.show();
-}
-
-void eventListener(ConnectionEvent event) {
-  switch (event) {
-    case NOT_CONNECTED_TO_WIFI:
-      Serial.println("Not Connected to WiFi");
-      break;
-    case CONNECTING_TO_WIFI:
-      Serial.println("Connecting to WiFi");
-      break;
-    case CONNECTED_TO_WIFI:
-      Serial.println("Connected to WiFi");
-      break;
-    case NOT_CONNECTED_TO_MQTT_SERVER:
-      Serial.println("Not Connected to MQTT Server");
-      break;
-    case CONNECTED_TO_MQTT_SERVER:
-      Serial.println("Connected to MQTT Server");
-      Uttr.subscribe(colorChannel);
-      Uttr.subscribe(speedChannel);
-      break;
-    case AP_MODE:
-      Serial.println("AP Mode");
-      break;
-    default:
-      break;
-  }
 }

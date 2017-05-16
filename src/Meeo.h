@@ -3,12 +3,14 @@
 
 #define DEBUG_MEEO
 
-#ifndef ESP8266
-#error This code is intended to run on the ESP8266 platform! Please check your Tools->Board setting.
+#include <Arduino.h>
+
+#ifdef ESP8266
+    #include <ESP8266WiFi.h>
+#elif defined __AVR
+    #include <Client.h>
 #endif
 
-#include <Arduino.h>
-#include <ESP8266WiFi.h>
 #include <PubSubClient.h>
 
 typedef enum meeoEventType {
@@ -24,36 +26,40 @@ typedef enum meeoEventType {
 
 class MeeoCore {
     public:
-        void begin(const char * nameSpace, const char * accessKey);
-        void begin(const char * nameSpace, const char * accessKey, String ssid, String pass);
+        #ifdef ESP8266
+            void begin(String nameSpace, String accessKey, String ssid = "", String pass = "");
+        #elif defined __AVR
+            void begin(String nameSpace, String accessKey, Client & client);
+        #endif
         void run();
-        void setEventHandler(void (* f)(MeeoEvent));
-        void setDataReceivedHandler(void (* handler)(char *, uint8_t *, unsigned int));
-        boolean publish(const char * topic, const char * payload, boolean retained = true);
-        boolean subscribe(const char * topic, uint8_t qos = 0, boolean asMqttTopic = false);
-        boolean unsubscribe(const char * topic);
+        void setEventHandler(void (* f)(MeeoEventType));
+        void setDataReceivedHandler(void (* f)(String, String));
+        boolean publish(String topic, String payload, boolean retained = true, boolean asMqttTopic = false);
+        boolean subscribe(String topic, uint8_t qos = 0, boolean asMqttTopic = false);
+        boolean unsubscribe(String topic, boolean asMqttTopic = false);
 
-        String toString(char * message);
-        String toString(byte * message, unsigned int length);
-        void stringToRGB(String payload, int * r, int * g, int * b);
-        boolean isTopicEqual(String uttrTopic, String topic);
+        String convertToString(char * message);
+        String convertToString(byte * message, unsigned int length);
+        void convertStringToRGB(String payload, int * r, int * g, int * b);
+        boolean isChannelMatched(String uttrTopic, String topic);
     private:
-        const char * _nameSpace;
-        const char * _accessKey;
-        const char * _ssid;
-        const char * _pass;
-        const char * _macAddress;
+        String _nameSpace;
+        String _accessKey;
         boolean _listenForClient = false;
 
-        void beginMeeo(const char * nameSpace, const char * accessKey, const char * ssid, const char * pass);
-        void setupAP();
-        boolean testWiFi();
-        void getWiFiCredentials();
-        String urlDecode(String str);
-        unsigned char h2int(char c);
+        #ifdef ESP8266
+            void beginMeeo(String nameSpace, String accessKey, String ssid, String pass);
+            void setupAP();
+            boolean testWiFi();
+            void getWiFiCredentials();
+            String urlDecode(String str);
+            unsigned char h2int(char c);
+        #elif defined __AVR
+            void beginMeeo(String nameSpace, String accessKey, Client & client);
+        #endif
 
-        MeeoEvent _event;
-        void (* meeoEventHandler)(MeeoEvent);
+        MeeoEventType _event;
+        void (* _meeoEventHandler)(MeeoEventType);
 };
 
 extern MeeoCore Meeo;
