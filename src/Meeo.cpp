@@ -157,7 +157,7 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
         }
 
         macID.toUpperCase();
-        String AP_NameString = "ESP8266-" + macID;
+        String AP_NameString = "Meeo-" + macID;
         _macAddress = AP_NameString;
 
         this->_event = WIFI_CONNECTING;
@@ -191,7 +191,8 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
         this->_nameSpace = nameSpace;
         this->_accessKey = accessKey;
 
-        randomSeed(analogRead(0));
+        //use analog pin 3 for random seed
+        randomSeed(analogRead(3));
 
         String clientId = String(nameSpace) + "-" + String(random(65536)) + String(random(65536)) + String(random(65536));
         meeo_log("Client ID: " + clientId);
