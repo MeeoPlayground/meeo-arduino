@@ -28,13 +28,13 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [Crowtail NodeMCU Driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 
 ## Functions (API)
-* [`Meeo.begin(nameSpace, accessKey,[ssid],[pass])`](#function-begin)
-* [`Meeo.begin(nameSpace, accessKey,client)`](#function-begin-1)
+* [`Meeo.begin(nameSpace, accessKey, [ssid], [pass])`](#function-begin)
+* [`Meeo.begin(nameSpace, accessKey, client)`](#function-begin-1)
 * [`Meeo.run()`](#function-run)
 * [`Meeo.setEventHandler(void (*f)(MeeoEventType))`](#function-seteventhandler)
-* [`Meeo.setDataReceivedHandler(void (*f)(topic,payload))`](#function-setdatareceivedhandler)
+* [`Meeo.setDataReceivedHandler(void (*f)(topic, payload))`](#function-setdatareceivedhandler)
 * [`Meeo.subscribe(channel)`](#function-subscribe)
-* [`Meeo.publish(channel,payload)`](#function-publish)
+* [`Meeo.publish(channel, payload)`](#function-publish)
 
 
 -------------------------------------------------------
@@ -42,7 +42,7 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 #### `Meeo.begin(String nameSpace, String accessKey, String ssid, String pass)`
 Connects to Meeo. To get your `nameSpace` and `accessKey`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
 
-To use WiFi, provide your wifi networks' SSID (`ssid`) and password (`pass`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, this function will not return. Instead it will try to run the board in **AP Mode**(Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
+To use WiFi, provide your wifi networks' SSID (`ssid`) and password (`pass`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, this function will not return. Instead it will try to run the board in **AP Mode**  (Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
 Enable [debug mode](#debug-mode) to see detailed logs.
 
@@ -50,7 +50,7 @@ Example:
 ```c++
 void setup(){
   Serial.begin(115200);
-  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
+  Meeo.begin("my_namespace", "my_access_key", "MyWiFi", "qwerty123"));
 }
 ```
 -------------------------------------------------------
@@ -64,7 +64,7 @@ EthernetClient ethClient;
 void setup(){
   Serial.begin(115200);
   Ethernet.begin(mac);
-  Meeo.begin("my_namespace","my_access_key",ethClient));
+  Meeo.begin("my_namespace", "my_access_key", ethClient));
 }
 ```
 -------------------------------------------------------
@@ -101,7 +101,7 @@ void setup(){
   Serial.begin(115200);
 
   Meeo.setEventHandler(meeoEventHandler);
-  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
+  Meeo.begin("my_namespace", "my_access_key", "MyWiFi", "qwerty123"));
 }
 
 ...
@@ -143,7 +143,7 @@ void setup(){
 
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataReceivedHandler);
-  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
+  Meeo.begin("my_namespace", "my_access_key", "MyWiFi", "qwerty123"));
 }
 
 ...
@@ -175,7 +175,7 @@ void setup(){
 
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataReceivedHandler);
-  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
+  Meeo.begin("my_namespace", "my_access_key", "MyWiFi", "qwerty123"));
 }
 
 ...
@@ -207,6 +207,20 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     default:
       break;
+  }
+}
+```
+-------------------------------------------------------
+<a name="function-publish"></a>
+#### `Meeo.publish(String channel, String payload)`
+Let's your device send data to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every publish). Payload is the data you want to send to the channel. Be sure that it is String formatted. Example:
+```c++
+unsigned long previous = 0;
+void loop() {
+  Meeo.run();
+  if (millis() - previous >= 1000) {
+    previous = millis();
+    Meeo.publish("hello-world-channel", "Hello World!!");
   }
 }
 ```
