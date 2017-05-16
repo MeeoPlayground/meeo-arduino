@@ -1,7 +1,37 @@
+/*
+    Arduino Library for Meeo
+    https://meeo.io
+
+    MIT License
+
+    Copyright (c) 2017 Meeo by Circuitrocks
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+ */
 #ifndef Meeo_h
 #define Meeo_h
 
+// Uncomment this if you don't want to see
+// runtime logs from the library
 #define DEBUG_MEEO
+
+
 
 #include <Arduino.h>
 
@@ -9,6 +39,8 @@
     #include <ESP8266WiFi.h>
 #elif defined __AVR
     #include <Client.h>
+#else
+    #error Unsupported Board
 #endif
 
 #include <PubSubClient.h>
@@ -30,18 +62,20 @@ class MeeoCore {
             void begin(String nameSpace, String accessKey, String ssid = "", String pass = "");
         #elif defined __AVR
             void begin(String nameSpace, String accessKey, Client & client);
+        #else
+            #error Unsupported Board
         #endif
         void run();
         void setEventHandler(void (* f)(MeeoEventType));
         void setDataReceivedHandler(void (* f)(String, String));
-        boolean publish(String topic, String payload, boolean retained = true, boolean asMqttTopic = false);
-        boolean subscribe(String topic, uint8_t qos = 0, boolean asMqttTopic = false);
-        boolean unsubscribe(String topic, boolean asMqttTopic = false);
+        boolean publish(String channel, String payload, boolean retained = true, boolean asMqttTopic = false);
+        boolean subscribe(String channel, uint8_t qos = 0, boolean asMqttTopic = false);
+        boolean unsubscribe(String channel, boolean asMqttTopic = false);
 
         String convertToString(char * message);
         String convertToString(byte * message, unsigned int length);
         void convertStringToRGB(String payload, int * r, int * g, int * b);
-        boolean isChannelMatched(String uttrTopic, String topic);
+        boolean isChannelMatched(String rawTopic, String channel);
     private:
         String _nameSpace;
         String _accessKey;
@@ -56,6 +90,8 @@ class MeeoCore {
             unsigned char h2int(char c);
         #elif defined __AVR
             void beginMeeo(String nameSpace, String accessKey, Client & client);
+        #else
+            #error Unsupported Board
         #endif
 
         MeeoEventType _event;

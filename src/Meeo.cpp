@@ -1,5 +1,32 @@
+/*
+    Arduino Library for Meeo
+    https://meeo.io
+
+    MIT License
+
+    Copyright (c) 2017 Meeo by Circuitrocks
+
+    Permission is hereby granted, free of charge, to any person obtaining a copy
+    of this software and associated documentation files (the "Software"), to deal
+    in the Software without restriction, including without limitation the rights
+    to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+    copies of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be included in all
+    copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+    IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+    FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+    AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+    OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+    SOFTWARE.
+ */
 #include "Meeo.h"
 
+// Meeo server defaults
 String mqttServer = "mq.meeo.io";
 int mqttPort = 1883;
 MeeoCore Meeo;
@@ -8,8 +35,12 @@ String _ssid;
 String _pass;
 String _macAddress;
 
+// Due to limitations with the PubSubClient, only one (1) data handler can be registered
+// at any given time. Which is fine since our aim is to just have a single instance
+// of MeeoCore
 static void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLength);
-void (* _dataReceivedHandler)(String, String);
+void (* _dataReceivedHandler)(String, String) = NULL;
+
 
 #ifdef ESP8266
     WiFiServer server(80);
@@ -42,7 +73,6 @@ void (* _dataReceivedHandler)(String, String);
 #endif
 
 //Main Methods
-
 void MeeoCore::run() {
     if (!pubSubClient.connected()) {
         this->_event = MQ_DISCONNECTED;
@@ -64,34 +94,43 @@ void MeeoCore::setDataReceivedHandler(void (* f)(String, String)) {
     pubSubClient.setCallback(_callbackHandler);
 }
 
-boolean MeeoCore::publish(String topic, String payload, boolean retained, boolean asMqttTopic) {
+boolean MeeoCore::publish(String channel, String payload, boolean retained, boolean asMqttTopic) {
+    // Check if the channel is a raw MQTT topic or just simple a channel (MQTT topic without namespace)
     if (asMqttTopic) {
-        return pubSubClient.publish(topic.c_str(), payload.c_str(), retained);
+        return pubSubClient.publish(channel.c_str(), payload.c_str(), retained);
     } else {
-        String newTopic = this->_nameSpace + "/" + topic;
+        //If passed as channel, prepend the namespace
+        String newTopic = this->_nameSpace + "/" + channel;
         return pubSubClient.publish(newTopic.c_str(), payload.c_str(), retained);
     }
 }
 
-boolean MeeoCore::subscribe(String topic, uint8_t qos, boolean asMqttTopic) {
+boolean MeeoCore::subscribe(String channel, uint8_t qos, boolean asMqttTopic) {
+    // Check if the channel is a raw MQTT topic or just simple a channel (MQTT topic without namespace)
     if (asMqttTopic) {
-        return pubSubClient.subscribe(topic.c_str(), qos);
+        return pubSubClient.subscribe(channel.c_str(), qos);
     } else {
-        String newTopic = this->_nameSpace + "/" + topic;
+        //If passed as channel, prepend the namespace
+        String newTopic = this->_nameSpace + "/" + channel;
         return pubSubClient.subscribe(newTopic.c_str(), qos);
     }
 }
 
-boolean MeeoCore::unsubscribe(String topic, boolean asMqttTopic) {
+boolean MeeoCore::unsubscribe(String channel, boolean asMqttTopic) {
+    // Check if the channel is a raw MQTT topic or just simple a channel (MQTT topic without namespace)
     if (asMqttTopic) {
-        return pubSubClient.unsubscribe(topic.c_str());
+        return pubSubClient.unsubscribe(channel.c_str());
     } else {
-        String newTopic = this->_nameSpace + "/" + topic;
+        //If passed as channel, prepend the namespace
+        String newTopic = this->_nameSpace + "/" + channel;
         return pubSubClient.unsubscribe(newTopic.c_str());
     }
 }
 
 void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLength) {
+    //If no handler defined, simply return
+    if(_dataReceivedHandler == NULL) return;
+
     String sTopic = Meeo.convertToString(topic);
     String sPayload = Meeo.convertToString(payload, payloadLength);
 
@@ -337,7 +376,7 @@ void MeeoCore::convertStringToRGB(String payload, int * r, int * g, int * b) {
     *b = atoi(strtok(NULL, ","));
 }
 
-boolean MeeoCore::isChannelMatched(String MeeoTopic, String topic) {
-    String temp = String(this->_nameSpace) + "/" + topic;
-    return MeeoTopic.equalsIgnoreCase(temp);
+boolean MeeoCore::isChannelMatched(String rawTopic, String channel) {
+    String temp = String(this->_nameSpace) + "/" + channel;
+    return rawTopic.equalsIgnoreCase(temp);
 }
