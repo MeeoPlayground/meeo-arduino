@@ -56,7 +56,7 @@ void setup(){
 -------------------------------------------------------
 <a name="function-begin-1"></a>
 #### `Meeo.begin(String nameSpace, String accessKey, Client client)`
-To use a different means to connect to the internet, you can provide a [`Client`](https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/Client.h) instance instead. This is applicable for scenarios such using Arduino Yun board or Yun Shield with `YunClient` or Arduino Ethernet shield with `EthernetClient`. *NOTE* For Arduino Yun board or Yun Shield using `YunClient`, make sure to call `Bridge.begin()` first before calling `Meeo.begin()`.
+To use a different means to connect to the internet, you can provide a [`Client`](https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/Client.h) instance instead. This is applicable for scenarios such using Arduino Yun board or Yun Shield with `YunClient` or Arduino Ethernet shield with `EthernetClient`. *NOTE:* For Arduino Yun board or Yun Shield using `YunClient`, make sure to call `Bridge.begin()` first before calling `Meeo.begin()`.
 
 Example:
 ```c++
@@ -82,7 +82,7 @@ void loop() {
 -------------------------------------------------------
 <a name="function-seteventhandler"></a>
 #### `Meeo.setEventHandler(void (*f)(MeeoEventType))`
-Sets the handler of generic events coming from the subsystem. This is useful if you want to handle system status changes such WiFi connectivity process. **IMPORTANT NOTE:** Set the handler before calling `begin()`; `begin()` function triggers several events relevant to initialization.
+Sets the handler of generic events coming from the subsystem. This is useful if you want to handle system status changes such as WiFi connectivity process The WiFi events are not triggered if a `Client` is set on `begin()` . **IMPORTANT NOTE:** Set the handler before calling `begin()`; `begin()` function triggers several events relevant to initialization.
 
 `MeeoEventType` is an enum and the available values are:
 * `WIFI_CONNECTING`
@@ -165,7 +165,7 @@ void meeoDataHandler(String topic, String payload) {
 -------------------------------------------------------
 <a name="function-subscribe"></a>
 #### `Meeo.subscribe(String channel)`
-Let's your device listen to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every subscribe). 
+Lets your device listen to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every subscribe). 
 
 Example: 
 ```c++
@@ -213,7 +213,7 @@ void meeoEventHandler(MeeoEventType event) {
 -------------------------------------------------------
 <a name="function-publish"></a>
 #### `Meeo.publish(String channel, String payload)`
-Let's your device send data to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every publish). Payload is the data you want to send to the channel. Be sure that it is String formatted. Example:
+Lets your device send data to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every publish). Payload is the data you want to send to the channel. Be sure that it is String formatted. Example:
 ```c++
 unsigned long previous = 0;
 void loop() {
@@ -227,6 +227,7 @@ void loop() {
 
 <a name="debug-mode"></a>
 ## Enabling debug mode
+Display debug messages unto the Serial Monitor. To enable/disable debugging, uncomment/comment out the line `#define DEBUG_MEEO` on Meeo.h file
 
 <a name="ap-mode"></a>
 ## Running in AP mode
