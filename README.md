@@ -28,12 +28,13 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [Crowtail NodeMCU Driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 
 ## Functions (API)
-* [`Meeo.begin(nameSpace, accessKey,[wifiSsid],[wifiPassword])`](#function-begin)
+* [`Meeo.begin(nameSpace, accessKey,[ssid],[pass])`](#function-begin)
 * [`Meeo.begin(nameSpace, accessKey,client)`](#function-begin-1)
 * [`Meeo.run()`](#function-run)
 * [`Meeo.setEventHandler(void (*f)(MeeoEventType))`](#function-seteventhandler)
-* [`Meeo.setDataReceivedHandler(void (*f)(topic,payload,payloadLength))`](#function-setdatareceivedhandler)
+* [`Meeo.setDataReceivedHandler(void (*f)(topic,payload))`](#function-setdatareceivedhandler)
 * [`Meeo.subscribe(channel)`](#function-subscribe)
+* [`Meeo.publish(channel,payload)`](#function-publish)
 
 
 -------------------------------------------------------
