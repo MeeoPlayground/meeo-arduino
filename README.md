@@ -38,27 +38,23 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 
 -------------------------------------------------------
 <a name="function-begin"></a>
-#### `Meeo.begin(const char * nameSpace,const char * accessKey,[const char * wifiSsid],[const char * wifiPassword])`
+#### `Meeo.begin(String nameSpace, String accessKey, String ssid, String pass)`
 Connects to Meeo. To get your `nameSpace` and `accessKey`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
 
-To use WiFi, provide your wifi networks' SSID (`wifiSsid`) and password (`wifiPassword`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, this function will not return. Instead it will try to run the board in **AP Mode**(Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
+To use WiFi, provide your wifi networks' SSID (`ssid`) and password (`pass`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, this function will not return. Instead it will try to run the board in **AP Mode**(Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
-This function will return `true` for a successful initialization/connection, `false` otherwise. Enable [debug mode](#debug-mode) to see detailed logs.
+Enable [debug mode](#debug-mode) to see detailed logs.
 
 Example:
 ```c++
 void setup(){
   Serial.begin(115200);
-  if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
-    Serial.println("Can't connect to Meeo servers");
-  }
-  // YOUR CODE HERE
-  // ...
+  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
 }
 ```
 -------------------------------------------------------
 <a name="function-begin-1"></a>
-#### `Meeo.begin(const char * nameSpace,const char * accessKey,Client client)`
+#### `Meeo.begin(String nameSpace, String accessKey, Client client)`
 To use a different means to connect to the internet, you can provide a [`Client`](https://github.com/arduino/Arduino/blob/master/hardware/arduino/avr/cores/arduino/Client.h) instance instead. This is applicable for scenarios such using Arduino Yun board or Yun Shield with `YunClient` or Arduino Ethernet shield with `EthernetClient`. *NOTE* For Arduino Yun board or Yun Shield using `YunClient`, make sure to call `Bridge.begin()` first before calling `Meeo.begin()`.
 
 Example:
@@ -66,12 +62,8 @@ Example:
 EthernetClient ethClient;
 void setup(){
   Serial.begin(115200);
-  Ethernet.begin(mac, ip);
-  if( !Meeo.begin("my_namespace","my_access_key",ethClient)) {
-    Serial.println("Can't connect to Meeo servers");
-  }
-  // YOUR CODE HERE
-  // ...
+  Ethernet.begin(mac);
+  Meeo.begin("my_namespace","my_access_key",ethClient));
 }
 ```
 -------------------------------------------------------
@@ -108,11 +100,7 @@ void setup(){
   Serial.begin(115200);
 
   Meeo.setEventHandler(meeoEventHandler);
-  if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
-    Serial.println("Can't connect to Meeo servers");
-  }
-  // YOUR CODE HERE
-  // ...
+  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
 }
 
 ...
@@ -136,13 +124,12 @@ void meeoEventHandler(MeeoEventType eventType){
 ```
 -------------------------------------------------------
 <a name="function-setdatareceivedhandler"></a>
-#### `Meeo.setDataReceivedHandler(void (*f)(char* topic, byte* payload, unsigned int payloadLength))`
+#### `Meeo.setDataReceivedHandler(void (*f)(String topic, String payload))`
 Sets the function callback to be triggered once there are available data from the server. The function expects data from topics registered via `subscribe()` calls. 
 
 Parameters are
-* `topic` - raw MQTT topic source of the data; 
-* `payload` - data payload in byte format. To convert to String, you can use `Meeo.convertToString()` function.
-* `payloadLength` - the number of bytes received
+* `topic` - raw MQTT topic source of the data
+* `payload` - data payload
 
 To compare raw MQTT topics to channel, use `Meeo.isChannelMatched(rawTopic,channel)`. This function returns `true` if the `channel` prepended with the `nameSpace` provided during `begin()` is equal to `rawTopic`; `false` otherwise.
 
@@ -155,28 +142,22 @@ void setup(){
 
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataReceivedHandler);
-  if( !Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123")) {
-    Serial.println("Can't connect to Meeo servers");
-  }
-  // YOUR CODE HERE
-  // ...
+  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
 }
 
 ...
 
-void meeoDataReceivedHandler(char* topic, byte* payload, unsigned int payloadLength) {
-  String sTopic = Meeo.convertToString(topic);
-  String sPayload = Meeo.convertToString(payload, payloadLength);
-  Serial.print(sTopic);
+void meeoDataHandler(String topic, String payload) {
+  Serial.print(topic);
   Serial.print(": ");
-  Serial.println(sPayload);
+  Serial.println(payload);
 
-  if (Meeo.isChannelMatched(sTopic, "kitchen-lights")) {
-      if (sPayload.toInt() == 1) {
-          digitalWrite(BULB_RELAY, HIGH);
-      } else {
-          digitalWrite(BULB_RELAY, LOW);
-      }
+  if (Meeo.isChannelMatched(topic, channel)) {
+    if (payload.toInt() == 1) {
+      digitalWrite(CONTROLLABLE_COMPONENT, LOW);
+    } else {
+      digitalWrite(CONTROLLABLE_COMPONENT, HIGH);
+    }
   }
 }
 ```
@@ -187,16 +168,45 @@ Let's your device listen to one of your channels. Channel is simply an MQTT topi
 
 Example: 
 ```c++
-void setup() {
+void setup(){
+  Serial.begin(115200);
 
-  // MEEO INITIALIZATION HERE
-  
-  
-  Meeo.subscribe("kitchen-lights");
-  Meeo.subscribe("door-lock-state");
-  
-  // YOUR CODE HERE
-  // ...
+
+  Meeo.setEventHandler(meeoEventHandler);
+  Meeo.setDataReceivedHandler(meeoDataReceivedHandler);
+  Meeo.begin("my_namespace","my_access_key","MyWiFi","qwerty123"));
+}
+
+...
+
+void meeoEventHandler(MeeoEventType event) {
+  switch (event) {
+    case WIFI_DISCONNECTED:
+      Serial.println("Not Connected to WiFi");
+      break;
+    case WIFI_CONNECTING:
+      Serial.println("Connecting to WiFi");
+      break;
+    case WIFI_CONNECTED:
+      Serial.println("Connected to WiFi");
+      break;
+    case MQ_DISCONNECTED:
+      Serial.println("Not Connected to MQTT Server");
+      break;
+    case MQ_CONNECTED:
+      Serial.println("Connected to MQTT Server");
+      Meeo.subscribe("kitchen-lights");
+      Meeo.subscribe("door-lock-state");
+      break;
+    case MQ_BAD_CREDENTIALS:
+      Serial.println("Bad Credentials");
+      break;
+    case AP_MODE:
+      Serial.println("AP Mode");
+      break;
+    default:
+      break;
+  }
 }
 ```
 
