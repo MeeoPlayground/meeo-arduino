@@ -68,7 +68,7 @@ class MeeoCore {
         void run();
         void setEventHandler(void (* f)(MeeoEventType));
         void setDataReceivedHandler(void (* f)(String, String));
-        boolean publish(String channel, String payload, boolean retained = true, boolean asMqttTopic = false);
+        boolean publish(String channel, String payload, boolean asMqttTopic = false, boolean retained = true);
         boolean subscribe(String channel, uint8_t qos = 0, boolean asMqttTopic = false);
         boolean unsubscribe(String channel, boolean asMqttTopic = false);
 

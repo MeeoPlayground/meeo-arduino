@@ -94,7 +94,7 @@ void MeeoCore::setDataReceivedHandler(void (* f)(String, String)) {
     pubSubClient.setCallback(_callbackHandler);
 }
 
-boolean MeeoCore::publish(String channel, String payload, boolean retained, boolean asMqttTopic) {
+boolean MeeoCore::publish(String channel, String payload, boolean asMqttTopic, boolean retained) {
     // Check if the channel is a raw MQTT topic or just simple a channel (MQTT topic without namespace)
     if (asMqttTopic) {
         return pubSubClient.publish(channel.c_str(), payload.c_str(), retained);
