@@ -1,13 +1,13 @@
 /*
-  RoomLightStatus by Meeo
+  FireAlarm by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Did you left the room lights on again?! Monitor its state
-  with a light-dependent resistor (LDR) sensor
+  Equip your home with this Do-It-Yourself Fire Detector with
+  Remote Alarm
   More details of the project here: https://meeo.io/l/1000
 
   Copyright: Meeo
@@ -16,16 +16,15 @@
 */
 #include <Meeo.h>
 
-#define LDRPIN A0
-// If the value is greater than VALUE_THRESHOLD, then it is considered
-// that the room is illuminated
-#define VALUE_THRESHOLD 710
+#define FLAME_SENSOR_PIN D1
+#define BUZZER_PIN D2
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
 String ssid = "MyWiFi";
 String pass = "qwerty123";
-String channel = "room-light-status";
+String flameSensingChannel = "flame-sensing-state";
+
 unsigned long previous = 0;
 
 void setup() {
@@ -35,23 +34,24 @@ void setup() {
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ssid, pass);
 
-  pinMode(LDRPIN, INPUT);
+  pinMode(FLAME_SENSOR_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void loop() {
   Meeo.run();
 
   long now = millis();
-  // Check value every 5 seconds
-  if (now - previous >= 5000) {
+  // Check value every second
+  if (now - previous >=1000) {
     previous = now;
-    int value = analogRead(LDRPIN);
-    Serial.print("Value: ");
-    Serial.println(value);
-    if( value > VALUE_THRESHOLD){
-      Meeo.publish(channel, "on");
+    int state = digitalRead(FLAME_SENSOR_PIN);
+    // Flame sensor is Active Low. It turns to LOW when a presence of flame
+    // is detected
+    if( state == LOW){
+      Meeo.publish(flameSensingChannel, "1");
     } else {
-      Meeo.publish(channel, "off");
+      Meeo.publish(flameSensingChannel, "0");
     }
   }
 }
@@ -60,6 +60,14 @@ void meeoDataHandler(String topic, String payload) {
   Serial.print(topic);
   Serial.print(": ");
   Serial.println(payload);
+
+  if (Meeo.isChannelMatched(topic, flameSensingChannel)) {
+    if (payload.toInt() == 1) {
+      digitalWrite(BUZZER_PIN, HIGH);
+    } else {
+      digitalWrite(BUZZER_PIN, LOW);
+    }
+  }
 }
 
 void meeoEventHandler(MeeoEventType event) {
@@ -78,6 +86,7 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
+      Meeo.subscribe(flameSensingChannel);
       break;
     case MQ_BAD_CREDENTIALS:
       Serial.println("Bad Credentials");
