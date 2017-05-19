@@ -1,3 +1,25 @@
+/*
+  TinyWeatherStation by Meeo
+
+  This example will make use of Meeo. If you haven't already,
+  visit Meeo at https://meeo.io and create an account. Then
+  check how to get started with the Meeo library through
+  https://github.com/meeo/meeo-arduino
+
+  OTHER REQUIREMENTS
+  Under Sketch > Include Library > Manage Libraries...
+  Search and install the following:
+  * DHT sensor library by Adafruit
+  * Adafruit Unified Sensor by Adafruit
+
+  Remotely monitor the weather in a small area using a
+  simple DHT11 with Temperature and Humidity sensor builtin!
+  More details of the project here: https://meeo.io/l/1001
+
+  Copyright: Meeo
+  Author: Terence Anton Dela Fuente
+  License: MIT
+*/
 #include <Meeo.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
@@ -12,8 +34,8 @@ String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
 String ssid = "MyWiFi";
 String pass = "qwerty123";
-String temperatureChannel = "my-temperature-channel";
-String humidityChannel = "my-humidity-channel";
+String temperatureChannel = "room-temperature";
+String humidityChannel = "room-humidity";
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
@@ -24,6 +46,7 @@ void setup() {
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ssid, pass);
 
+  //Initialize your DHT Sensor
   dht.begin();
 }
 
@@ -42,7 +65,7 @@ void loop() {
     dht.humidity().getEvent(&event);
     int humidity = event.relative_humidity;
 
-    if (!isnan(temperature) && temperature <= 100) {
+    if (!isnan(temperature) && temperature <= 200) {
       Meeo.publish(temperatureChannel, String(temperature) + "C");
     }
 
@@ -74,8 +97,6 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
-      Meeo.subscribe(temperatureChannel);
-      Meeo.subscribe(humidityChannel);
       break;
     case MQ_BAD_CREDENTIALS:
       Serial.println("Bad Credentials");
