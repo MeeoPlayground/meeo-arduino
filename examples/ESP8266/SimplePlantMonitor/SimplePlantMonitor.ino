@@ -6,10 +6,22 @@
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Show your love to your green friends with this simple
-  temperature, humidity and soil moisture sensing for your
-  plants.
-  More details of the project here: https://meeo.io/l/1000
+  OTHER REQUIREMENTS
+  Under Sketch > Include Library > Manage Libraries...
+  Search and install the following:
+  * DHT sensor library by Adafruit
+  * Adafruit Unified Sensor by Adafruit
+
+
+  --- IMPORTANT NOTE ---
+  ESP8266 board's analog pin is only 1volt tolerant. Use a voltage divider
+  or any other means to bring down the voltage within 0 ~ 1 volt.
+
+
+  Remotely monitor your plants using a simple DHT11 with Temperature
+  and Humidity sensor builtin, plus
+  Soil Moisture sensor!
+  More details of the project here: https://meeo.io/l/1001
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -20,19 +32,19 @@
 #include <DHT.h>
 #include <DHT_U.h>
 
-#define DHTPIN D3
+#define MOISTUREPIN A0
+#define DHTPIN D2
 #define DHTTYPE DHT11
-#define SOILMOISTUREPIN A0
 
 unsigned long previous = 0;
 
-String nameSpace = "my_namespace";
-String accessKey = "my_access_key";
-String ssid = "MyWiFi";
-String pass = "qwerty123";
+String nameSpace = "md-hi75gqj";
+String accessKey = "user_K8SzwBbLqBEwfIqM";
+String ssid = "CIRCUITROCKS";
+String pass = "********";
 String temperatureChannel = "plant-ambient-temperature";
 String humidityChannel = "plant-ambient-humidity";
-String moistureChannel = "plant-soil-moisture";
+String soilMoistureChannel = "plant-soil-moisture";
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
@@ -45,13 +57,14 @@ void setup() {
 
   //Initialize your DHT Sensor
   dht.begin();
+
+  pinMode(MOISTUREPIN,INPUT);
 }
 
 void loop() {
   Meeo.run();
 
   unsigned long now = millis();
-  // Check the sensors every 3 seconds
   if (now - previous > 3000) {
     previous = now;
 
@@ -71,7 +84,11 @@ void loop() {
       Meeo.publish(humidityChannel, String(humidity));
     }
 
-    Meeo.publish(moistureChannel, String(map(analogRead(SOILMOISTUREPIN),0,1023,0,100)));
+    // Convert raw analog value (0 - 1023) to percent (0-100)
+    //
+    // Note that moisture value does not reach 1023 and might stay at a much lower range.
+    // Change 1023 as you please to calibrate your results
+    Meeo.publish(soilMoistureChannel,String(map(analogRead(MOISTUREPIN),0,1023,0,100)));
   }
 }
 
