@@ -127,6 +127,24 @@ boolean MeeoCore::unsubscribe(String channel, boolean asMqttTopic) {
     }
 }
 
+
+void MeeoCore::setLoggerChannel(String channel){
+  this->_loggerChannel = this->_nameSpace + "/" + channel;
+}
+size_t MeeoCore::write(const uint8_t *buffer, size_t size){
+  // Ignore if no logger channel defined or data is a simple new line
+  if(this->_loggerChannel == NULL || (buffer[0] == '\r' && buffer[1] == '\n')) return 0;
+  if(!pubSubClient.publish(this->_loggerChannel.c_str(), (const char *) buffer, false)){
+    return 0;
+  }
+  return size;
+}
+
+//No support for this function
+size_t MeeoCore::write(uint8_t b){
+  return 0;
+}
+
 void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLength) {
     //If no handler defined, simply return
     if(_dataReceivedHandler == NULL) return;

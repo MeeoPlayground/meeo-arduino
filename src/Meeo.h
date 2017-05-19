@@ -44,6 +44,7 @@
 #endif
 
 #include <PubSubClient.h>
+#include "Print.h"
 
 typedef enum meeoEventType {
     WIFI_CONNECTING = 0,
@@ -56,7 +57,7 @@ typedef enum meeoEventType {
     AP_MODE,
 } MeeoEventType;
 
-class MeeoCore {
+class MeeoCore : public Print {
     public:
         #ifdef ESP8266
             void begin(String nameSpace, String accessKey, String ssid = "", String pass = "");
@@ -76,10 +77,17 @@ class MeeoCore {
         String convertToString(byte * message, unsigned int length);
         void convertStringToRGB(String payload, int * r, int * g, int * b);
         boolean isChannelMatched(String rawTopic, String channel);
+
+        void setLoggerChannel(String channel);
+        size_t write(const uint8_t *buffer, size_t size);
+
+        // Meeo does not support this function
+        size_t write(uint8_t);
     private:
         String _nameSpace;
         String _accessKey;
         boolean _listenForClient = false;
+        String _loggerChannel;
 
         #ifdef ESP8266
             void beginMeeo(String nameSpace, String accessKey, String ssid, String pass);
