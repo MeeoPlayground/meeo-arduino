@@ -38,10 +38,10 @@
 
 unsigned long previous = 0;
 
-String nameSpace = "md-hi75gqj";
-String accessKey = "user_K8SzwBbLqBEwfIqM";
-String ssid = "CIRCUITROCKS";
-String pass = "********";
+String nameSpace = "my_namespace";
+String accessKey = "my_access_key";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
 String temperatureChannel = "plant-ambient-temperature";
 String humidityChannel = "plant-ambient-humidity";
 String soilMoistureChannel = "plant-soil-moisture";

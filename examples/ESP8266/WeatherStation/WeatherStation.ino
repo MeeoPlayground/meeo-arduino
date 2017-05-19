@@ -17,7 +17,7 @@
   ESP8266 board's analog pin is only 1volt tolerant. Use a voltage divider
   or any other means to bring down the voltage within 0 ~ 1 volt.
 
-  
+
   Remotely monitor the weather in a small area using a
   simple DHT11 with Temperature and Humidity sensor builtin, plus
   Water sensor!
@@ -41,10 +41,10 @@
 
 unsigned long previous = 0;
 
-String nameSpace = "md-hi75gqj";
-String accessKey = "user_K8SzwBbLqBEwfIqM";
-String ssid = "CIRCUITROCKS";
-String pass = "********";
+String nameSpace = "my_namespace";
+String accessKey = "my_access_key";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
 String temperatureChannel = "ambient-temperature";
 String humidityChannel = "ambient-humidity";
 String waterPresenceChannel = "water-presence";
