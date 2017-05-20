@@ -82,7 +82,7 @@ void loop() {
 -------------------------------------------------------
 <a name="function-seteventhandler"></a>
 #### `Meeo.setEventHandler(void (*f)(MeeoEventType))`
-Sets the handler of generic events coming from the subsystem. This is useful if you want to handle system status changes such as WiFi connectivity process The WiFi events are not triggered if a `Client` is set on `begin()` . **IMPORTANT NOTE:** Set the handler before calling `begin()`; `begin()` function triggers several events relevant to initialization.
+Sets the handler of generic events coming from the subsystem. This is useful if you want to handle system status changes such as WiFi connectivity process The WiFi events are not triggered if a `Client` is set on `begin()` . **IMPORTANT NOTE:** Set the handler before calling `begin()`. `begin()` function triggers several events relevant to initialization.
 
 `MeeoEventType` is an enum and the available values are:
 * `WIFI_CONNECTING`
@@ -132,7 +132,7 @@ Parameters are
 * `topic` - raw MQTT topic source of the data
 * `payload` - data payload
 
-To compare raw MQTT topics to channel, use `Meeo.isChannelMatched(rawTopic,channel)`. This function returns `true` if the `channel` prepended with the `nameSpace` provided during `begin()` is equal to `rawTopic`; `false` otherwise.
+To compare raw MQTT topics to channel, use `Meeo.isChannelMatched(rawTopic,channel)`. This function returns `true` if the `channel` prepended with the `nameSpace` provided during `begin()` is equal to `rawTopic`. `false` is returned if otherwise.
 
 
 Example:
@@ -211,6 +211,7 @@ void loop() {
 ## Enabling debug mode
 Display debug messages unto the Serial Monitor. To enable/disable debugging, uncomment/comment out the line `#define DEBUG_MEEO` on Meeo.h file
 
+-------------------------------------------------------
 <a name="ap-mode"></a>
 ## Running in AP mode
-
+Checkout this [link](https://medium.com/meeo/meeo-arduino-running-in-ap-mode-9933e56c0fdd) to know more information about the AP Mode.
