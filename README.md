@@ -211,7 +211,6 @@ void loop() {
 ## Enabling debug mode
 Display debug messages unto the Serial Monitor. To enable/disable debugging, uncomment/comment out the line `#define DEBUG_MEEO` on Meeo.h file
 
--------------------------------------------------------
 <a name="ap-mode"></a>
 ## Running in AP mode
 Checkout this [link](https://medium.com/meeo/meeo-arduino-running-in-ap-mode-9933e56c0fdd) to know more information about the AP Mode.
