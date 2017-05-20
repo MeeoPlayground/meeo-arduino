@@ -1,5 +1,5 @@
 /*
-  WeatherStation by Meeo
+  SimplePlantMonitor by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
@@ -12,9 +12,9 @@
   * DHT sensor library by Adafruit
   * Adafruit Unified Sensor by Adafruit
 
-  Remotely monitor the weather in a small area using a
-  simple DHT11 with Temperature and Humidity sensor builtin, plus
-  Water sensor!
+  Remotely monitor your plants using a simple DHT11 with Temperature
+  and Humidity sensor builtin, plus
+  Soil Moisture sensor!
   More details of the project here: https://meeo.io/l/1001
 
   Copyright: Meeo
@@ -26,37 +26,39 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
+#include <SPI.h>
+#include <Ethernet.h>
 
-#define WATERPIN A0
-// If water presence value is less than WATER_LEVEL_THRESHOLD, it means
-// water is present
-#define WATER_LEVEL_THRESHOLD 200
-#define DHTPIN D2
+#define MOISTUREPIN A0
+#define DHTPIN 3
 #define DHTTYPE DHT11
 
 unsigned long previous = 0;
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String ssid = "MyWiFi";
-String pass = "qwerty123";
-String temperatureChannel = "ambient-temperature";
-String humidityChannel = "ambient-humidity";
-String waterPresenceChannel = "water-presence";
+String temperatureChannel = "plant-ambient-temperature";
+String humidityChannel = "plant-ambient-humidity";
+String soilMoistureChannel = "plant-soil-moisture";
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
+
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+EthernetClient ethClient;
 
 void setup() {
   Serial.begin(115200);
 
+  Ethernet.begin(mac);
+
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ssid, pass);
+  Meeo.begin(nameSpace, accessKey, ethClient);
 
   //Initialize your DHT Sensor
   dht.begin();
 
-  pinMode(WATERPIN, INPUT);
+  pinMode(MOISTUREPIN,INPUT);
 }
 
 void loop() {
@@ -82,14 +84,11 @@ void loop() {
       Meeo.publish(humidityChannel, String(humidity));
     }
 
-    int value = analogRead(WATERPIN);
-    // If water presence value is less than WATER_LEVEL_THRESHOLD, it means
-    // water is present
-    if(value < WATER_LEVEL_THRESHOLD){
-      Meeo.publish(waterPresenceChannel, "on");
-    } else {
-      Meeo.publish(waterPresenceChannel, "off");
-    }
+    // Convert raw analog value (0 - 1023) to percent (0-100)
+    //
+    // Note that moisture value does not reach 1023 and might stay at a much lower range.
+    // Change 1023 as you please to calibrate your results
+    Meeo.publish(soilMoistureChannel, String(map(analogRead(MOISTUREPIN), 0, 1023, 0, 100)));
   }
 }
 

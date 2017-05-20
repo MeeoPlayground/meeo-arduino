@@ -1,13 +1,12 @@
 /*
-  RoomLightStatus by Meeo
+  RemoteLogger by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Did you left the room lights on again?! Monitor its state
-  with a light-dependent resistor (LDR) sensor
+  Log important events and see it anywhere you go.
   More details of the project here: https://meeo.io/l/1000
 
   Copyright: Meeo
@@ -16,52 +15,70 @@
 */
 
 #include <Meeo.h>
-
-#define LDRPIN A0
-// If the value is greater than VALUE_THRESHOLD, then it is considered
-// that the room is illuminated
-#define VALUE_THRESHOLD 710
+#include <SPI.h>
+#include <Ethernet.h>
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String ssid = "MyWiFi";
-String pass = "qwerty123";
-String channel = "room-light-status";
+String loggerChannel = "button-logs";
+
+#define BUTTON_A_PIN 3
+#define BUTTON_B_PIN 4
+uint8_t previousButtonAState = LOW;
+uint8_t previousButtonBState = LOW;
 
 unsigned long previous = 0;
+
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+EthernetClient ethClient;
 
 void setup() {
   Serial.begin(115200);
 
+  Ethernet.begin(mac);
+
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ssid, pass);
+  Meeo.begin(nameSpace, accessKey, ethClient);
+  Meeo.setLoggerChannel(loggerChannel);
 
-  pinMode(LDRPIN, INPUT);
+  pinMode(BUTTON_A_PIN, INPUT);
+  pinMode(BUTTON_B_PIN, INPUT);
 }
 
 void loop() {
   Meeo.run();
 
-  long now = millis();
-  // Check value every 5 seconds
-  if (now - previous >= 5000) {
-    previous = now;
-    int value = analogRead(LDRPIN);
-    Serial.print("Value: ");
-    Serial.println(value);
-    if (value > VALUE_THRESHOLD) {
-      Meeo.publish(channel, "on");
-    } else {
-      Meeo.publish(channel, "off");
+  uint8_t buttonAState = digitalRead(BUTTON_A_PIN);
+  if (buttonAState != previousButtonAState) {
+    delay(100); //Debounce
+    buttonAState = digitalRead(BUTTON_A_PIN);
+
+    if (buttonAState != previousButtonAState) {
+      previousButtonAState = buttonAState;
+
+      if (buttonAState == HIGH) {
+        Meeo.println("[INFO] Button A Pressed! " + String(millis()));
+      }
+    }
+  }
+  uint8_t buttonBState = digitalRead(BUTTON_B_PIN);
+  if (buttonBState != previousButtonBState) {
+    delay(100); //Debounce
+    buttonBState = digitalRead(BUTTON_B_PIN);
+
+    if (buttonBState != previousButtonBState) {
+      previousButtonBState = buttonBState;
+
+      if (buttonBState == HIGH) {
+        Meeo.println("[ERROR] Button B Pressed! " + String(millis()));
+      }
     }
   }
 }
 
 void meeoDataHandler(String topic, String payload) {
-  Serial.print(topic);
-  Serial.print(": ");
-  Serial.println(payload);
+
 }
 
 void meeoEventHandler(MeeoEventType event) {

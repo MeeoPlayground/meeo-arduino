@@ -27,6 +27,7 @@
   Author: Terence Anton Dela Fuente
   License: MIT
 */
+
 #include <Meeo.h>
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
@@ -88,7 +89,7 @@ void loop() {
     //
     // Note that moisture value does not reach 1023 and might stay at a much lower range.
     // Change 1023 as you please to calibrate your results
-    Meeo.publish(soilMoistureChannel,String(map(analogRead(MOISTUREPIN),0,1023,0,100)));
+    Meeo.publish(soilMoistureChannel, String(map(analogRead(MOISTUREPIN), 0, 1023, 0, 100)));
   }
 }
 

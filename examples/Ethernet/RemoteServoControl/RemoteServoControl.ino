@@ -17,21 +17,26 @@
 
 #include <Meeo.h>
 #include <Servo.h>
+#include <SPI.h>
+#include <Ethernet.h>
 
-#define SERVO_PIN D1
+#define SERVO_PIN 9
 #define MAX_ANGLE 180
 #define MIN_ANGLE 0
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String ssid = "MyWiFi";
-String pass = "qwerty123";
 String channel = "servo-sweep";
 
 Servo servo;
 
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+EthernetClient ethClient;
+
 void setup() {
   Serial.begin(115200);
+
+  Ethernet.begin(mac);
 
   servo.attach(SERVO_PIN);
   // Set to starting position
@@ -39,7 +44,7 @@ void setup() {
 
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ssid, pass);
+  Meeo.begin(nameSpace, accessKey, ethClient);
 }
 
 void loop() {

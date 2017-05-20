@@ -14,6 +14,7 @@
   Author: Terence Anton Dela Fuente
   License: MIT
 */
+
 #include <Meeo.h>
 
 #define FLAME_SENSOR_PIN D1
@@ -48,7 +49,7 @@ void loop() {
     int state = digitalRead(FLAME_SENSOR_PIN);
     // Flame sensor is Active Low. It turns to LOW when a presence of flame
     // is detected
-    if( state == LOW){
+    if (state == LOW) {
       Meeo.publish(flameSensingChannel, "1");
     } else {
       Meeo.publish(flameSensingChannel, "0");

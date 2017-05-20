@@ -37,41 +37,39 @@ void setup() {
   Meeo.begin(nameSpace, accessKey, ssid, pass);
   Meeo.setLoggerChannel(loggerChannel);
 
-  pinMode(BUTTON_A_PIN,INPUT);
-  pinMode(BUTTON_B_PIN,INPUT);
+  pinMode(BUTTON_A_PIN, INPUT);
+  pinMode(BUTTON_B_PIN, INPUT);
 }
 
 void loop() {
   Meeo.run();
 
   uint8_t buttonAState = digitalRead(BUTTON_A_PIN);
-  if( buttonAState != previousButtonAState){
+  if (buttonAState != previousButtonAState) {
     delay(100); //Debounce
     buttonAState = digitalRead(BUTTON_A_PIN);
 
-    if(buttonAState != previousButtonAState){
+    if (buttonAState != previousButtonAState) {
       previousButtonAState = buttonAState;
 
-      if(buttonAState == HIGH){
+      if (buttonAState == HIGH) {
         Meeo.println("[INFO] Button A Pressed! " + String(millis()));
       }
     }
   }
   uint8_t buttonBState = digitalRead(BUTTON_B_PIN);
-  if( buttonBState != previousButtonBState){
+  if (buttonBState != previousButtonBState) {
     delay(100); //Debounce
     buttonBState = digitalRead(BUTTON_B_PIN);
 
-    if(buttonBState != previousButtonBState){
+    if (buttonBState != previousButtonBState) {
       previousButtonBState = buttonBState;
 
-      if(buttonBState == HIGH){
+      if (buttonBState == HIGH) {
         Meeo.println("[ERROR] Button B Pressed! " + String(millis()));
       }
     }
   }
-
-
 }
 
 void meeoDataHandler(String topic, String payload) {

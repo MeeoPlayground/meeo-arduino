@@ -1,14 +1,13 @@
 /*
-  RemoteServoControl by Meeo
+  RemoteRelayControl by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-
-  Remotely control a servo motor
-  More details of the project here: https://meeo.io/l/1001
+  Control your light bulb wherever you are!
+  More details of the project here: https://meeo.io/l/1000
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -16,30 +15,29 @@
 */
 
 #include <Meeo.h>
-#include <Servo.h>
+#include <SPI.h>
+#include <Ethernet.h>
 
-#define SERVO_PIN D1
-#define MAX_ANGLE 180
-#define MIN_ANGLE 0
+#define RELAY_PIN 3
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String ssid = "MyWiFi";
-String pass = "qwerty123";
-String channel = "servo-sweep";
+String channel = "remote-relay-control";
 
-Servo servo;
+byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
+EthernetClient ethClient;
 
 void setup() {
   Serial.begin(115200);
 
-  servo.attach(SERVO_PIN);
-  // Set to starting position
-  servo.write(MIN_ANGLE);
+  Ethernet.begin(mac);
 
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ssid, pass);
+  Meeo.begin(nameSpace, accessKey, ethClient);
+
+  pinMode(RELAY_PIN, OUTPUT);
+  digitalWrite(RELAY_PIN, LOW);
 }
 
 void loop() {
@@ -52,7 +50,11 @@ void meeoDataHandler(String topic, String payload) {
   Serial.println(payload);
 
   if (Meeo.isChannelMatched(topic, channel)) {
-    servo.write(map(payload.toInt(), 0, 100, MIN_ANGLE, MAX_ANGLE));
+    if (payload.toInt() == 1) {
+      digitalWrite(RELAY_PIN, HIGH);
+    } else {
+      digitalWrite(RELAY_PIN, LOW);
+    }
   }
 }
 
