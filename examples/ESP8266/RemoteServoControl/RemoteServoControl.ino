@@ -1,27 +1,45 @@
-#include <Meeo.h>
-#include <SPI.h>
-#include <Ethernet.h>
+/*
+  RemoteServoControl by Meeo
 
-#define CONTROLLABLE_COMPONENT LED_BUILTIN
+  This example will make use of Meeo. If you haven't already,
+  visit Meeo at https://meeo.io and create an account. Then
+  check how to get started with the Meeo library through
+  https://github.com/meeo/meeo-arduino
+
+
+  Remotely control a servo motor
+  More details of the project here: https://meeo.io/l/1001
+
+  Copyright: Meeo
+  Author: Terence Anton Dela Fuente
+  License: MIT
+*/
+
+#include <Meeo.h>
+#include <Servo.h>
+
+#define SERVO_PIN D1
+#define MAX_ANGLE 180
+#define MIN_ANGLE 0
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String channel = "my-channel";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
+String channel = "servo-sweep";
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-EthernetClient ethClient;
+Servo servo;
 
 void setup() {
   Serial.begin(115200);
 
-  Ethernet.begin(mac);
+  servo.attach(SERVO_PIN);
+  // Set to starting position
+  servo.write(MIN_ANGLE);
 
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ethClient);
-
-  pinMode(CONTROLLABLE_COMPONENT, OUTPUT);
-  digitalWrite(CONTROLLABLE_COMPONENT, LOW);
+  Meeo.begin(nameSpace, accessKey, ssid, pass);
 }
 
 void loop() {
@@ -34,11 +52,7 @@ void meeoDataHandler(String topic, String payload) {
   Serial.println(payload);
 
   if (Meeo.isChannelMatched(topic, channel)) {
-    if (payload.toInt() == 1) {
-      digitalWrite(CONTROLLABLE_COMPONENT, HIGH);
-    } else {
-      digitalWrite(CONTROLLABLE_COMPONENT, LOW);
-    }
+    servo.write(map(payload.toInt(), 0, 100, MIN_ANGLE, MAX_ANGLE));
   }
 }
 
@@ -58,6 +72,7 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
+      // Once connected, subscribe to the channel
       Meeo.subscribe(channel);
       break;
     case MQ_BAD_CREDENTIALS:

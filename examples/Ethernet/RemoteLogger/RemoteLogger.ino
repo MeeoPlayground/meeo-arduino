@@ -1,14 +1,13 @@
 /*
-  MessageDisplay by Meeo
+  RemoteLogger by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-
-  Send remote message and display it on a small OLED.
-  More details of the project here: https://meeo.io/l/1001
+  Log important events and see it anywhere you go.
+  More details of the project here: https://meeo.io/l/1000
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -16,35 +15,22 @@
 */
 
 #include <Meeo.h>
-#include <U8glib.h>
 #include <SPI.h>
 #include <Ethernet.h>
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String channel = "message-display";
+String loggerChannel = "button-logs";
 
-U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_DEV_0|U8G_I2C_OPT_FAST);
+#define BUTTON_A_PIN 3
+#define BUTTON_B_PIN 4
+uint8_t previousButtonAState = LOW;
+uint8_t previousButtonBState = LOW;
+
+unsigned long previous = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 EthernetClient ethClient;
-
-String message;
-
-void draw() {
-  u8g_uint_t x, y;
-  x = u8g.getWidth();
-  x -= u8g.getStrWidth(message.c_str());
-  x /= 2;
-
-  y = u8g.getHeight();
-  y += 10;
-  y /= 2;
-
-  u8g.setFont(u8g_font_unifont_0_8);
-  // Show the message on a small OLED
-  u8g.drawStr( x, y, message.c_str());
-}
 
 void setup() {
   Serial.begin(115200);
@@ -54,27 +40,45 @@ void setup() {
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ethClient);
+  Meeo.setLoggerChannel(loggerChannel);
 
-  u8g.setColorIndex(1);
+  pinMode(BUTTON_A_PIN, INPUT);
+  pinMode(BUTTON_B_PIN, INPUT);
 }
 
 void loop() {
   Meeo.run();
 
-  u8g.firstPage();
-  do {
-    draw();
-  } while( u8g.nextPage() );
+  uint8_t buttonAState = digitalRead(BUTTON_A_PIN);
+  if (buttonAState != previousButtonAState) {
+    delay(100); //Debounce
+    buttonAState = digitalRead(BUTTON_A_PIN);
+
+    if (buttonAState != previousButtonAState) {
+      previousButtonAState = buttonAState;
+
+      if (buttonAState == HIGH) {
+        Meeo.println("[INFO] Button A Pressed! " + String(millis()));
+      }
+    }
+  }
+  uint8_t buttonBState = digitalRead(BUTTON_B_PIN);
+  if (buttonBState != previousButtonBState) {
+    delay(100); //Debounce
+    buttonBState = digitalRead(BUTTON_B_PIN);
+
+    if (buttonBState != previousButtonBState) {
+      previousButtonBState = buttonBState;
+
+      if (buttonBState == HIGH) {
+        Meeo.println("[ERROR] Button B Pressed! " + String(millis()));
+      }
+    }
+  }
 }
 
 void meeoDataHandler(String topic, String payload) {
-  Serial.print(topic);
-  Serial.print(": ");
-  Serial.println(payload);
 
-  if (Meeo.isChannelMatched(topic, channel)) {
-    message = payload;
-  }
 }
 
 void meeoEventHandler(MeeoEventType event) {
@@ -93,7 +97,6 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
-      Meeo.subscribe(channel);
       break;
     case MQ_BAD_CREDENTIALS:
       Serial.println("Bad Credentials");

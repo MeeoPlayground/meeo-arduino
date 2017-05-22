@@ -1,14 +1,14 @@
 /*
-  MessageDisplay by Meeo
+  FireAlarm by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-
-  Send remote message and display it on a small OLED.
-  More details of the project here: https://meeo.io/l/1001
+  Equip your home with this Do-It-Yourself Fire Detector with
+  Remote Alarm
+  More details of the project here: https://meeo.io/l/1000
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -16,35 +16,20 @@
 */
 
 #include <Meeo.h>
-#include <U8glib.h>
 #include <SPI.h>
 #include <Ethernet.h>
 
+#define FLAME_SENSOR_PIN 2
+#define BUZZER_PIN 3
+
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String channel = "message-display";
+String flameSensingChannel = "flame-sensing-state";
 
-U8GLIB_SH1106_128X64 u8g(U8G_I2C_OPT_DEV_0|U8G_I2C_OPT_FAST);
+unsigned long previous = 0;
 
 byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
 EthernetClient ethClient;
-
-String message;
-
-void draw() {
-  u8g_uint_t x, y;
-  x = u8g.getWidth();
-  x -= u8g.getStrWidth(message.c_str());
-  x /= 2;
-
-  y = u8g.getHeight();
-  y += 10;
-  y /= 2;
-
-  u8g.setFont(u8g_font_unifont_0_8);
-  // Show the message on a small OLED
-  u8g.drawStr( x, y, message.c_str());
-}
 
 void setup() {
   Serial.begin(115200);
@@ -55,16 +40,26 @@ void setup() {
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ethClient);
 
-  u8g.setColorIndex(1);
+  pinMode(FLAME_SENSOR_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void loop() {
   Meeo.run();
 
-  u8g.firstPage();
-  do {
-    draw();
-  } while( u8g.nextPage() );
+  long now = millis();
+  // Check value every second
+  if (now - previous >=1000) {
+    previous = now;
+    int state = digitalRead(FLAME_SENSOR_PIN);
+    // Flame sensor is Active Low. It turns to LOW when a presence of flame
+    // is detected
+    if( state == LOW){
+      Meeo.publish(flameSensingChannel, "1");
+    } else {
+      Meeo.publish(flameSensingChannel, "0");
+    }
+  }
 }
 
 void meeoDataHandler(String topic, String payload) {
@@ -72,8 +67,12 @@ void meeoDataHandler(String topic, String payload) {
   Serial.print(": ");
   Serial.println(payload);
 
-  if (Meeo.isChannelMatched(topic, channel)) {
-    message = payload;
+  if (Meeo.isChannelMatched(topic, flameSensingChannel)) {
+    if (payload.toInt() == 1) {
+      digitalWrite(BUZZER_PIN, HIGH);
+    } else {
+      digitalWrite(BUZZER_PIN, LOW);
+    }
   }
 }
 
@@ -93,7 +92,7 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
-      Meeo.subscribe(channel);
+      Meeo.subscribe(flameSensingChannel);
       break;
     case MQ_BAD_CREDENTIALS:
       Serial.println("Bad Credentials");

@@ -1,15 +1,32 @@
+/*
+  PartyLights by Meeo
+
+  This example will make use of Meeo. If you haven't already,
+  visit Meeo at https://meeo.io and create an account. Then
+  check how to get started with the Meeo library through
+  https://github.com/meeo/meeo-arduino
+
+  Pump-up your room with a set of Party Lights!
+  More details of the project here: https://meeo.io/l/1000
+
+  Copyright: Meeo
+  Author: Terence Anton Dela Fuente
+  License: MIT
+*/
+
 #include <Meeo.h>
 #include <SPI.h>
 #include <Ethernet.h>
 #include <Adafruit_NeoPixel.h>
 
 #define PIN 3
+// Number of WS2812B (or NeoPixel) in your light chain
 #define NUMPIXELS 4
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String colorChannel = "my-color-channel";
-String speedChannel = "my-speed-channel";
+String colorChannel = "party-lights-color";
+String speedChannel = "party-lights-speed";
 
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int r, g, b;
@@ -32,6 +49,7 @@ void setup() {
 
   pixels.begin();
 
+  //Reset all LEDs to off
   for (int i = 0; i < NUMPIXELS; i++) {
     pixels.setPixelColor(i, pixels.Color(0,0,0));
   }
@@ -92,6 +110,8 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
+
+      //Once connected, subscribe to the channels
       Meeo.subscribe(colorChannel);
       Meeo.subscribe(speedChannel);
       break;
