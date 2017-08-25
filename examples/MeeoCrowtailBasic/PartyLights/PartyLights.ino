@@ -47,15 +47,15 @@ void setup() {
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ssid, pass);
 
-  #ifdef LOGGER_CHANNEL
+#ifdef LOGGER_CHANNEL
   Meeo.setLoggerChannel(LOGGER_CHANNEL);
-  #endif
+#endif
 
   pixels.begin();
 
   //Reset all LEDs to off
   for (int i = 0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(0,0,0));
+    pixels.setPixelColor(i, pixels.Color(0, 0, 0));
   }
   pixels.show();
 }
@@ -67,28 +67,28 @@ void loop() {
 
   if (duration == 0) {
     for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(0,0,0));
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
     }
     pixels.show();
-    #ifdef LOGGER_CHANNEL
-    if(durationChanged){
+#ifdef LOGGER_CHANNEL
+    if (durationChanged) {
       Meeo.println("[INFO] Lights turned off");
     }
-    #endif
+#endif
   } else if (duration == 100) {
     for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(r,g,b));
+      pixels.setPixelColor(i, pixels.Color(r, g, b));
     }
     pixels.show();
-    #ifdef LOGGER_CHANNEL
-    if(durationChanged){
+#ifdef LOGGER_CHANNEL
+    if (durationChanged) {
       Meeo.println("[INFO] Blinking stopped");
     }
-    #endif
+#endif
   } else {
     if (currentMillis - colorMillis >= (100 - duration)) {
       colorMillis = currentMillis;
-      pixels.setPixelColor(pixelCount, pixels.Color(r,g,b));
+      pixels.setPixelColor(pixelCount, pixels.Color(r, g, b));
       turnOffPixels(pixelCount);
       pixelCount++;
     }
@@ -145,7 +145,7 @@ void meeoEventHandler(MeeoEventType event) {
 void turnOffPixels(int ctr) {
   for (int i = 0; i < NUMPIXELS; i++) {
     if (i != ctr) {
-      pixels.setPixelColor(i, pixels.Color(0,0,0));
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
       pixels.show();
     }
   }

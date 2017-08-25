@@ -1,5 +1,5 @@
 /*
-  SimplePlantMonitor by Meeo
+  IPLocation by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
@@ -9,20 +9,12 @@
   OTHER REQUIREMENTS
   Under Sketch > Include Library > Manage Libraries...
   Search and install the following:
-    DHT sensor library by Adafruit
-    Adafruit Unified Sensor by Adafruit
+    ESP8266RestClient by fabianofranca
+    ArduinoJson by Benoit Blanchon
 
-
-  --- IMPORTANT NOTE ---
-  ESP8266 board's analog pin is only 1volt tolerant. Use a voltage divider
-  or any other means to bring down the voltage within 0 ~ 1 volt.
-
-
-  Remotely monitor your plants using a simple DHT11 with Temperature
-  and Humidity sensor builtin, plus
-  Soil Moisture sensor!
+  Know your GPS location based on your IP address with ipapi.co!
   More details of the project here:
-  https://medium.com/meeo/meeo-project-simple-plant-monitor-b2bb9d6f2dc6
+  https://medium.com/meeo/meeo-project-ip-location-4a81316c0b30
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -30,28 +22,24 @@
 */
 
 #include <Meeo.h>
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-#include <DHT_U.h>
+#include <RestClient.h>
+#include <ArduinoJson.h>
 
 // Uncomment if you wish to see the events on the Meeo dashboard
 // #define LOGGER_CHANNEL "logger"
-
-#define MOISTUREPIN A0
-#define DHTPIN D2
-#define DHTTYPE DHT11
-
-unsigned long previous = 0;
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
 String ssid = "MyWiFi";
 String pass = "qwerty123";
-String temperatureChannel = "plant-ambient-temperature";
-String humidityChannel = "plant-ambient-humidity";
-String soilMoistureChannel = "plant-soil-moisture";
+String ipLocationChannel = "ip-location";
 
-DHT_Unified dht(DHTPIN, DHTTYPE);
+// ipapi.co will serve as our GPS tracker based on the current IP address of the
+// device
+RestClient client = RestClient("ipapi.co");
+DynamicJsonBuffer jsonBuffer;
+
+unsigned long previous = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -63,48 +51,45 @@ void setup() {
 #ifdef LOGGER_CHANNEL
   Meeo.setLoggerChannel(LOGGER_CHANNEL);
 #endif
-
-  //Initialize your DHT Sensor
-  dht.begin();
-
-  pinMode(MOISTUREPIN, INPUT);
 }
 
 void loop() {
   Meeo.run();
 
   unsigned long now = millis();
+  // Check value every 10 seconds
   if (now - previous >= 10000) {
     previous = now;
 
-    sensors_event_t event;
+    String response = "";
+    int statusCode = client.get("/json", &response);
 
-    dht.temperature().getEvent(&event);
-    int temperature = event.temperature;
+    if (statusCode == 200) {
+      // parse the response from request
+      JsonObject& root = jsonBuffer.parseObject(response);
+      float latitude = root[String("latitude")];
+      float longitude = root[String("longitude")];
+      String location = String(latitude, 6) + "," + String(longitude, 6);
 
-    dht.humidity().getEvent(&event);
-    int humidity = event.relative_humidity;
+      Meeo.publish(channel, ipLocationChannel);
 
-    if (!isnan(temperature) && temperature <= 200) {
-      Meeo.publish(temperatureChannel, String(temperature) + "C");
-    }
+      String tempCity = root[String("city")];
+      String tempRegion = root[String("region")];
+      String tempCountryName = root[String("country_name")];
+      String tempTimezone = root[String("timezone")];
 
-    if (!isnan(humidity) && humidity <= 100) {
-      Meeo.publish(humidityChannel, String(humidity));
-    }
-
-    // Convert raw analog value (0 - 1023) to percent (0-100)
-    //
-    // Note that moisture value does not reach 1023 and might stay at a much lower range.
-    // Change 1023 as you please to calibrate your results
-    int soilMoistureLevel = map(analogRead(MOISTUREPIN), 0, 1023, 0, 100);
-    Meeo.publish(soilMoistureChannel, String(soilMoistureLevel));
+      String city = "[INFO] City: " + tempCity;
+      String region = "[INFO] Region: " + tempRegion;
+      String countryName = "[INFO] Country: " + tempCountryName;
+      String timezone = "[INFO] Timezone: " + tempTimezone;
 
 #ifdef LOGGER_CHANNEL
-    if (soilMoistureLevel < 30) {
-      Meeo.println("[WARNING] Your plant is getting dry!");
-    }
+      Meeo.println(city);
+      Meeo.println(region);
+      Meeo.println(countryName);
+      Meeo.println(timezone);
 #endif
+    }
   }
 }
 
