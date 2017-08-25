@@ -1,14 +1,15 @@
 /*
-  RemoteBlink by Meeo
+  FireAlarm by Meeo
 
   This example will make use of Meeo. If you haven't already,
   visit Meeo at https://meeo.io and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Super charge your very basic LED project by connecting and
-  controlling it over the internet!
-  More details of the project here: https://meeo.io/l/1000
+  Equip your home with this Do-It-Yourself Fire Detector with
+  Alarm
+  More details of the project here:
+  https://medium.com/meeo/meeo-project-fire-alarm-cdedd9a2ee6a
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -16,34 +17,55 @@
 */
 
 #include <Meeo.h>
-#include <SPI.h>
-#include <Ethernet.h>
 
-#define LED_PIN LED_BUILTIN
+// Uncomment if you wish to see the events on the Meeo dashboard
+// #define LOGGER_CHANNEL "logger"
+
+#define FLAME_SENSOR_PIN D1
+#define BUZZER_PIN D2
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
-String channel = "remote-blink";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
+String flameSensingChannel = "flame-sensing-state";
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-EthernetClient ethClient;
+unsigned long previous = 0;
 
 void setup() {
   Serial.begin(115200);
 
-  Ethernet.begin(mac);
-
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ethClient);
+  Meeo.begin(nameSpace, accessKey, ssid, pass);
 
-  pinMode(LED_PIN, OUTPUT);
-  //Arduino builtin LED is Active HIGH. Set it to LOW to turn it off.
-  digitalWrite(LED_PIN, LOW);
+  #ifdef LOGGER_CHANNEL
+  Meeo.setLoggerChannel(LOGGER_CHANNEL);
+  #endif
+
+  pinMode(FLAME_SENSOR_PIN, INPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void loop() {
   Meeo.run();
+
+  long now = millis();
+  // Check value every second
+  if (now - previous >=1000) {
+    previous = now;
+    int state = digitalRead(FLAME_SENSOR_PIN);
+    // Flame sensor is Active Low. It turns to LOW when a presence of flame
+    // is detected
+    if (state == LOW) {
+      Meeo.publish(flameSensingChannel, "1");
+      #ifdef LOGGER_CHANNEL
+      Meeo.println("[WARNING] Flame detected");
+      #endif
+    } else {
+      Meeo.publish(flameSensingChannel, "0");
+    }
+  }
 }
 
 void meeoDataHandler(String topic, String payload) {
@@ -51,11 +73,11 @@ void meeoDataHandler(String topic, String payload) {
   Serial.print(": ");
   Serial.println(payload);
 
-  if (Meeo.isChannelMatched(topic, channel)) {
+  if (Meeo.isChannelMatched(topic, flameSensingChannel)) {
     if (payload.toInt() == 1) {
-      digitalWrite(LED_PIN, HIGH);
+      digitalWrite(BUZZER_PIN, HIGH);
     } else {
-      digitalWrite(LED_PIN, LOW);
+      digitalWrite(BUZZER_PIN, LOW);
     }
   }
 }
@@ -76,8 +98,7 @@ void meeoEventHandler(MeeoEventType event) {
       break;
     case MQ_CONNECTED:
       Serial.println("Connected to MQTT Server");
-      // Once connected, subscribe to the channel
-      Meeo.subscribe(channel);
+      Meeo.subscribe(flameSensingChannel);
       break;
     case MQ_BAD_CREDENTIALS:
       Serial.println("Bad Credentials");

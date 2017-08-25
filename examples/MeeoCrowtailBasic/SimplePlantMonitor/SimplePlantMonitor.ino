@@ -12,10 +12,17 @@
   * DHT sensor library by Adafruit
   * Adafruit Unified Sensor by Adafruit
 
+
+  --- IMPORTANT NOTE ---
+  ESP8266 board's analog pin is only 1volt tolerant. Use a voltage divider
+  or any other means to bring down the voltage within 0 ~ 1 volt.
+
+
   Remotely monitor your plants using a simple DHT11 with Temperature
   and Humidity sensor builtin, plus
   Soil Moisture sensor!
-  More details of the project here: https://meeo.io/l/1001
+  More details of the project here:
+  https://medium.com/meeo/meeo-project-simple-plant-monitor-b2bb9d6f2dc6
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -26,34 +33,36 @@
 #include <Adafruit_Sensor.h>
 #include <DHT.h>
 #include <DHT_U.h>
-#include <SPI.h>
-#include <Ethernet.h>
+
+// Uncomment if you wish to see the events on the Meeo dashboard
+// #define LOGGER_CHANNEL "logger"
 
 #define MOISTUREPIN A0
-#define DHTPIN 3
+#define DHTPIN D2
 #define DHTTYPE DHT11
 
 unsigned long previous = 0;
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
+String ssid = "MyWiFi";
+String pass = "qwerty123";
 String temperatureChannel = "plant-ambient-temperature";
 String humidityChannel = "plant-ambient-humidity";
 String soilMoistureChannel = "plant-soil-moisture";
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 
-byte mac[] = { 0xDE, 0xAD, 0xBE, 0xEF, 0xFE, 0xED };
-EthernetClient ethClient;
-
 void setup() {
   Serial.begin(115200);
 
-  Ethernet.begin(mac);
-
   Meeo.setEventHandler(meeoEventHandler);
   Meeo.setDataReceivedHandler(meeoDataHandler);
-  Meeo.begin(nameSpace, accessKey, ethClient);
+  Meeo.begin(nameSpace, accessKey, ssid, pass);
+
+  #ifdef LOGGER_CHANNEL
+  Meeo.setLoggerChannel(LOGGER_CHANNEL);
+  #endif
 
   //Initialize your DHT Sensor
   dht.begin();
@@ -88,7 +97,14 @@ void loop() {
     //
     // Note that moisture value does not reach 1023 and might stay at a much lower range.
     // Change 1023 as you please to calibrate your results
-    Meeo.publish(soilMoistureChannel, String(map(analogRead(MOISTUREPIN), 0, 1023, 0, 100)));
+    int soilMoistureLevel = map(analogRead(MOISTUREPIN), 0, 1023, 0, 100);
+    Meeo.publish(soilMoistureChannel, String(soilMoistureLevel));
+
+    #ifdef LOGGER_CHANNEL
+    if(soilMoistureLevel < 30){
+      Meeo.println("[WARNING] Your plant is getting dry!");
+    }
+    #endif
   }
 }
 

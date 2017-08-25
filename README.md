@@ -1,6 +1,6 @@
 ![Meeo for Arduino](https://res.cloudinary.com/circuitrocks/image/upload/v1494252922/meeo-arduino-banner_rll8rv.jpg)
 # Meeo for Arduino
-This library lets you connect your Arduino to your Meeo dashboard, and to your other devices through Meeo.
+This library lets you connect your Arduino to your [Meeo](https://meeo.io) dashboard, and to your other devices through [Meeo](https://meeo.io) server.
 
 ## Compatible Hardware
 This library is tested to be used on the following board:
@@ -17,7 +17,7 @@ _If you want your board to be supported, open an issue to let us know._
 Install the latest version of the [Arduino IDE](https://www.arduino.cc/en/Main/Software). After the installation, if an ESP8266 board is used, install the ESP8266 Board Package in order to program the ESP8266 modules through Arduino IDE. To do so, Adafruit provided a great guide on how to setup the ESP8266 modules on the Arduino IDE [here](https://learn.adafruit.com/adafruit-feather-huzzah-esp8266/using-arduino-ide)
 
 ### PubSubClient Library
-Meeo makes use of MQTT at its core, therefore we need an MQTT Client for Arduino. 
+Meeo makes use of MQTT at its core, therefore we need an MQTT Client for Arduino.
 Search and install knolleary's [PubSubClient](https://github.com/knolleary/pubsubclient) via the Library Manager inside the Arduino IDE. Go to `Sketch`->`Include Library`->`Manage Libraries...`
 
 ### Install your board's drivers
@@ -40,7 +40,7 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 -------------------------------------------------------
 <a name="function-begin"></a>
 #### `Meeo.begin(String nameSpace, String accessKey, String ssid, String pass)`
-Connects to Meeo. To get your `nameSpace` and `accessKey`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978). 
+Connects to Meeo. To get your `nameSpace` and `accessKey`, check our guide [here](https://medium.com/meeo/meeo-credentials-e84db15c7978).
 
 To use WiFi, provide your wifi networks' SSID (`ssid`) and password (`pass`). The library will automatically handles the WiFi connectivity initialization. **NOTE:** For ESP8266-based boards, if WiFi credentials are not provided or the board can't connect to previously set network, this function will not return. Instead it will try to run the board in **AP Mode**  (Hotspot) where the credentials can be set via REST calls. Check [Running in AP Mode](#ap-mode) below for more details. This feature is useful if you want to deploy your project on a different network without re-flashing your board.
 
@@ -74,7 +74,7 @@ In most cases, Arduinos run on a single thread thus new data coming from Meeo ar
 ```c++
 void loop() {
   Meeo.run();
-  
+
   // YOUR CODE HERE
   // ...
 }
@@ -126,7 +126,7 @@ void meeoEventHandler(MeeoEventType eventType){
 -------------------------------------------------------
 <a name="function-setdatareceivedhandler"></a>
 #### `Meeo.setDataReceivedHandler(void (*f)(String topic, String payload))`
-Sets the function callback to be triggered once there are available data from the server. The function expects data from topics registered via `subscribe()` calls. 
+Sets the function callback to be triggered once there are available data from the server. The function expects data from topics registered via `subscribe()` calls.
 
 Parameters are
 * `topic` - raw MQTT topic source of the data
@@ -167,7 +167,7 @@ void meeoDataHandler(String topic, String payload) {
 #### `Meeo.subscribe(String channel)`
 Lets your device listen to one of your channels. Channel is simply an MQTT topic without your `namespace` (So you don't need to repeat yourself for every subscribe). *NOTE* Only call `subcribe()` after receiving the `MQ_CONNECTED` event.
 
-Example: 
+Example:
 ```c++
 void setup(){
   Serial.begin(115200);
@@ -203,6 +203,27 @@ void loop() {
   if (millis() - previous >= 1000) {
     previous = millis();
     Meeo.publish("hello-world-channel", "Hello World!!");
+  }
+}
+```
+-------------------------------------------------------
+<a name="function-setloggerchannel"></a>
+#### `Meeo.setLoggerChannel(String channel)`
+Lets your device send data logs to a channel like a Serial interface. Note that too frequent logging will increase data usage, so only the remote logger for important events captured by your device.
+
+ Example:
+```c++
+unsigned long previous = 0;
+
+void setup(){
+  Meeo.begin("my_namespace", "my_access_key", "MyWiFi", "qwerty123"));
+  Meeo.setLoggerChannel("logger");
+}
+void loop() {
+  Meeo.run();
+  if (millis() - previous >= 5000) {
+    previous = millis();
+    Meeo.println("[INFO] Hello from my device!");
   }
 }
 ```
