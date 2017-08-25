@@ -209,7 +209,7 @@ void loop() {
 -------------------------------------------------------
 <a name="function-setloggerchannel"></a>
 #### `Meeo.setLoggerChannel(String channel)`
-Lets your device send data logs to a channel like a Serial interface. Note that too frequent logging will increase data usage, so only the remote logger for important events captured by your device.
+Lets your device send data logs to a channel like a `Serial` interface (i.e. `println`,`print`). Note that too frequent logging will increase data usage, so only use the remote logger for important events captured by your device.
 
  Example:
 ```c++
