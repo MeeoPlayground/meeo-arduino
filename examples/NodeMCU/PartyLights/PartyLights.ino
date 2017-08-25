@@ -6,8 +6,9 @@
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Pump-up your room with a set of Party Lights!
-  More details of the project here: https://meeo.io/l/1000
+  Pump-up your room with a set of (tiny) Party Lights!
+  More details of the project here:
+  https://medium.com/meeo/meeo-project-party-lights-f128d75e957c
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -16,6 +17,9 @@
 
 #include <Meeo.h>
 #include <Adafruit_NeoPixel.h>
+
+// Uncomment if you wish to see the events on the Meeo dashboard
+// #define LOGGER_CHANNEL "logger"
 
 #define PIN D3
 // Number of WS2812B (or NeoPixel) in your light chain
@@ -31,6 +35,7 @@ String speedChannel = "party-lights-speed";
 Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 int r, g, b;
 unsigned long duration;
+bool durationChanged = false;
 
 int pixelCount = 0;
 unsigned long colorMillis;
@@ -42,11 +47,15 @@ void setup() {
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ssid, pass);
 
+#ifdef LOGGER_CHANNEL
+  Meeo.setLoggerChannel(LOGGER_CHANNEL);
+#endif
+
   pixels.begin();
 
   //Reset all LEDs to off
   for (int i = 0; i < NUMPIXELS; i++) {
-    pixels.setPixelColor(i, pixels.Color(0,0,0));
+    pixels.setPixelColor(i, pixels.Color(0, 0, 0));
   }
   pixels.show();
 }
@@ -58,23 +67,34 @@ void loop() {
 
   if (duration == 0) {
     for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(0,0,0));
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
     }
     pixels.show();
+#ifdef LOGGER_CHANNEL
+    if (durationChanged) {
+      Meeo.println("[INFO] Lights turned off");
+    }
+#endif
   } else if (duration == 100) {
     for (int i = 0; i < NUMPIXELS; i++) {
-      pixels.setPixelColor(i, pixels.Color(r,g,b));
+      pixels.setPixelColor(i, pixels.Color(r, g, b));
     }
     pixels.show();
+#ifdef LOGGER_CHANNEL
+    if (durationChanged) {
+      Meeo.println("[INFO] Blinking stopped");
+    }
+#endif
   } else {
     if (currentMillis - colorMillis >= (100 - duration)) {
       colorMillis = currentMillis;
-      pixels.setPixelColor(pixelCount, pixels.Color(r,g,b));
+      pixels.setPixelColor(pixelCount, pixels.Color(r, g, b));
       turnOffPixels(pixelCount);
       pixelCount++;
     }
   }
   if (pixelCount >= NUMPIXELS) pixelCount = 0;
+  durationChanged = false;
 }
 
 void meeoDataHandler(String topic, String payload) {
@@ -85,6 +105,7 @@ void meeoDataHandler(String topic, String payload) {
   if (Meeo.isChannelMatched(topic, colorChannel)) {
     Meeo.convertStringToRGB(payload, &r, &g, &b);
   } else if (Meeo.isChannelMatched(topic, speedChannel)) {
+    durationChanged = true;
     duration = payload.toInt();
   }
 }
@@ -124,7 +145,7 @@ void meeoEventHandler(MeeoEventType event) {
 void turnOffPixels(int ctr) {
   for (int i = 0; i < NUMPIXELS; i++) {
     if (i != ctr) {
-      pixels.setPixelColor(i, pixels.Color(0,0,0));
+      pixels.setPixelColor(i, pixels.Color(0, 0, 0));
       pixels.show();
     }
   }
