@@ -74,7 +74,7 @@ void loop() {
   Meeo.run();
 
   unsigned long now = millis();
-  if (now - previous > 3000) {
+  if (now - previous > 10000) {
     previous = now;
 
     sensors_event_t event;
