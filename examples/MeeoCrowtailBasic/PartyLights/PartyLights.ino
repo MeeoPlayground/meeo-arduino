@@ -6,7 +6,7 @@
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Pump-up your room with a set of Party Lights!
+  Pump-up your room with a set of (tiny) Party Lights!
   More details of the project here:
   https://medium.com/meeo/meeo-project-party-lights-f128d75e957c
 

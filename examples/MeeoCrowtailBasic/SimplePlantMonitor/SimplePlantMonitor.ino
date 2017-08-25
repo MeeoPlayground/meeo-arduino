@@ -9,14 +9,8 @@
   OTHER REQUIREMENTS
   Under Sketch > Include Library > Manage Libraries...
   Search and install the following:
-    DHT sensor library by Adafruit
-    Adafruit Unified Sensor by Adafruit
-
-
-  --- IMPORTANT NOTE ---
-  ESP8266 board's analog pin is only 1volt tolerant. Use a voltage divider
-  or any other means to bring down the voltage within 0 ~ 1 volt.
-
+  * DHT sensor library by Adafruit
+  * Adafruit Unified Sensor by Adafruit
 
   Remotely monitor your plants using a simple DHT11 with Temperature
   and Humidity sensor builtin, plus

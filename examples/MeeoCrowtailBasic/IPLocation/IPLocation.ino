@@ -9,8 +9,8 @@
   OTHER REQUIREMENTS
   Under Sketch > Include Library > Manage Libraries...
   Search and install the following:
-    ESP8266RestClient by fabianofranca
-    ArduinoJson by Benoit Blanchon
+  * ESP8266RestClient by fabianofranca
+  * ArduinoJson by Benoit Blanchon
 
   Know your GPS location based on your IP address with ipapi.co!
   More details of the project here:
@@ -48,9 +48,9 @@ void setup() {
   Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ssid, pass);
 
-#ifdef LOGGER_CHANNEL
-  Meeo.setLoggerChannel(LOGGER_CHANNEL);
-#endif
+  #ifdef LOGGER_CHANNEL
+    Meeo.setLoggerChannel(LOGGER_CHANNEL);
+  #endif
 }
 
 void loop() {
