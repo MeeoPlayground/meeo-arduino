@@ -71,8 +71,9 @@ void loop() {
       float longitude = root[String("longitude")];
       String location = String(latitude, 6) + "," + String(longitude, 6);
 
-      Meeo.publish(channel, ipLocationChannel);
+      Meeo.publish(ipLocationChannel, location);
 
+#ifdef LOGGER_CHANNEL
       String tempCity = root[String("city")];
       String tempRegion = root[String("region")];
       String tempCountryName = root[String("country_name")];
@@ -83,7 +84,6 @@ void loop() {
       String countryName = "[INFO] Country: " + tempCountryName;
       String timezone = "[INFO] Timezone: " + tempTimezone;
 
-#ifdef LOGGER_CHANNEL
       Meeo.println(city);
       Meeo.println(region);
       Meeo.println(countryName);
