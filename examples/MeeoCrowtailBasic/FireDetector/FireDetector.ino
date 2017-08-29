@@ -6,13 +6,9 @@
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 
-  Equip your home with this Do-It-Yourself Fire Alarm Buzzer
+  Equip your home with this Do-It-Yourself Fire Detector
   More details of the project here:
-  https://medium.com/meeo/meeo-project-fire-alarm-cdedd9a2ee6a
-
-  OPTIONAL REQUIREMENT
-  * It is better to work on FireDetector project first to
-  build a data source for the flame state
+  https://medium.com/meeo/meeo-project-fire-detector-9a658b6c25d1
 
   Copyright: Meeo
   Author: Terence Anton Dela Fuente
@@ -21,7 +17,10 @@
 
 #include <Meeo.h>
 
-#define BUZZER_PIN D2
+// Uncomment if you wish to see the events on the Meeo dashboard
+// #define LOGGER_CHANNEL "logger"
+
+#define FLAME_SENSOR_PIN D1
 
 String nameSpace = "my_namespace";
 String accessKey = "my_access_key";
@@ -35,30 +34,32 @@ void setup() {
   Serial.begin(115200);
 
   Meeo.setEventHandler(meeoEventHandler);
-  Meeo.setDataReceivedHandler(meeoDataHandler);
   Meeo.begin(nameSpace, accessKey, ssid, pass);
 
 #ifdef LOGGER_CHANNEL
   Meeo.setLoggerChannel(LOGGER_CHANNEL);
 #endif
 
-  pinMode(BUZZER_PIN, OUTPUT);
+  pinMode(FLAME_SENSOR_PIN, INPUT);
 }
 
 void loop() {
   Meeo.run();
-}
 
-void meeoDataHandler(String topic, String payload) {
-  Serial.print(topic);
-  Serial.print(": ");
-  Serial.println(payload);
-
-  if (Meeo.isChannelMatched(topic, flameSensingChannel)) {
-    if (payload.toInt() == 1) {
-      digitalWrite(BUZZER_PIN, HIGH);
+  unsigned long now = millis();
+  // Check value every second
+  if (now - previous >= 1000) {
+    previous = now;
+    int state = digitalRead(FLAME_SENSOR_PIN);
+    // Flame sensor is Active Low. It turns to LOW when a presence of flame
+    // is detected
+    if (state == LOW) {
+      Meeo.publish(flameSensingChannel, "1");
+#ifdef LOGGER_CHANNEL
+      Meeo.println("[WARNING] Flame detected");
+#endif
     } else {
-      digitalWrite(BUZZER_PIN, LOW);
+      Meeo.publish(flameSensingChannel, "0");
     }
   }
 }
