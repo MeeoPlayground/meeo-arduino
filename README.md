@@ -35,6 +35,7 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * [`Meeo.setDataReceivedHandler(void (*f)(topic, payload))`](#function-setdatareceivedhandler)
 * [`Meeo.subscribe(channel)`](#function-subscribe)
 * [`Meeo.publish(channel, payload)`](#function-publish)
+* [`Meeo.setLoggerChannel(String channel)`](#function-setloggerchannel)
 
 
 -------------------------------------------------------
