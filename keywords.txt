@@ -17,7 +17,7 @@ setDataReceivedHandler	KEYWORD2
 convertToString	KEYWORD2
 convertStringToRGB	KEYWORD2
 isChannelMatched	KEYWORD2
-setLoggerChannel    KEYWORD2
+setLoggerChannel	KEYWORD2
 
 # Handler helpers
 
