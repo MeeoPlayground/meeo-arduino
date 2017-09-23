@@ -42,7 +42,7 @@ static void _callbackHandler(char * topic, uint8_t * payload, unsigned int paylo
 void (* _dataReceivedHandler)(String, String) = NULL;
 
 
-#ifdef ESP8266
+#if defined ESP8266 || defined ESP32
     WiFiServer server(80);
     WiFiClient espClient;
     PubSubClient pubSubClient(espClient);
@@ -68,6 +68,17 @@ void (* _dataReceivedHandler)(String, String) = NULL;
 #elif defined __AVR
     void MeeoCore::begin(String nameSpace, String accessKey, Client & client) {
         meeo_log(F("Board detected: Arduino"));
+        beginMeeo(nameSpace, accessKey, client);
+    }
+#elif defined ESP32
+    void MeeoCore::begin(String nameSpace, String accessKey, String ssid, String pass) {
+        meeo_log(F("Board detected: ESP32"));
+        meeo_log(F("Meeo.begin called without WiFi connection"));
+        beginMeeo(nameSpace, accessKey, ssid, pass);
+    }
+    void MeeoCore::begin(String nameSpace, String accessKey, Client & client) {
+        meeo_log(F("Board detected: ESP32"));
+        meeo_log(F("Meeo.begin called with WiFi connection & WiFiClient"));
         beginMeeo(nameSpace, accessKey, client);
     }
 #endif
@@ -157,11 +168,12 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
 
 //Private Methods
 
-#ifdef ESP8266
+#ifdef ESP8266 || ESP32
     void MeeoCore::beginMeeo(String nameSpace, String accessKey, String ssid, String pass) {
         this->_nameSpace = nameSpace;
         this->_accessKey = accessKey;
 
+#ifdef ESP8266
         uint8_t mac[WL_MAC_ADDR_LENGTH];
         WiFi.softAPmacAddress(mac);
         String macID = "";
@@ -173,6 +185,22 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
               macID += String(mac[i], HEX);
           }
         }
+#elif defined ESP32
+        String macAddress = WiFi.macAddress();
+        // WiFi.softAPmacAddress(mac);
+        String macID = String (macAddress[0])
+                + String (macAddress[1])
+                + String (macAddress[3])
+                + String (macAddress[4])
+                + String (macAddress[6])
+                + String (macAddress[7])
+                + String (macAddress[9])
+                + String (macAddress[10])
+                + String (macAddress[12])
+                + String (macAddress[13])
+                + String (macAddress[15])
+                + String (macAddress[16]);
+#endif
 
         macID.toUpperCase();
         String AP_NameString = "Meeo-" + macID;
@@ -204,6 +232,36 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
             }
         }
     }
+#if defined ESP32
+    void MeeoCore::beginMeeo(String nameSpace, String accessKey, Client & client) {
+        this->_nameSpace = nameSpace;
+        this->_accessKey = accessKey;
+
+        String macAddress = WiFi.macAddress();
+        String clientId = String(nameSpace) + "-"
+                + String(macAddress[0])
+                + String(macAddress[1])
+                + String(macAddress[9])
+                + String(macAddress[10])
+                + String(macAddress[12])
+                + String(macAddress[13])
+                + String(macAddress[15])
+                + String(macAddress[16]);
+        meeo_log("Client ID: " + clientId);
+
+        pubSubClient.setClient(client);
+        pubSubClient.setServer(mqttServer.c_str(), mqttPort);
+        if (pubSubClient.connect(clientId.c_str(), this->_nameSpace.c_str(), this->_accessKey.c_str())) {
+            this->_event = MQ_CONNECTED;
+            this->_meeoEventHandler(this->_event);
+        } else {
+            if (pubSubClient.state() == 4) {
+                this->_event = MQ_BAD_CREDENTIALS;
+                this->_meeoEventHandler(this->_event);
+            }
+        }
+    }
+#endif
 #elif defined __AVR
     void MeeoCore::beginMeeo(String nameSpace, String accessKey, Client & client) {
         this->_nameSpace = nameSpace;
@@ -229,7 +287,7 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
     }
 #endif
 
-#ifdef ESP8266
+#ifdef ESP8266 || defined ESP32
     void MeeoCore::setupAP() {
         WiFi.mode(WIFI_AP);
         WiFi.softAP(_macAddress.c_str());
