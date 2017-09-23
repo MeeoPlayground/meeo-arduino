@@ -39,6 +39,8 @@
     #include <ESP8266WiFi.h>
 #elif defined __AVR
     #include <Client.h>
+#elif defined ESP32
+    #include <WiFi.h>
 #else
     #error Unsupported Board
 #endif
@@ -62,6 +64,9 @@ class MeeoCore : public Print {
         #ifdef ESP8266
             void begin(String nameSpace, String accessKey, String ssid = "", String pass = "");
         #elif defined __AVR
+            void begin(String nameSpace, String accessKey, Client & client);
+        #elif defined ESP32
+            void begin(String nameSpace, String accessKey, String ssid = "", String pass = "");
             void begin(String nameSpace, String accessKey, Client & client);
         #else
             #error Unsupported Board
@@ -91,6 +96,14 @@ class MeeoCore : public Print {
 
         #ifdef ESP8266
             void beginMeeo(String nameSpace, String accessKey, String ssid, String pass);
+            void setupAP();
+            boolean testWiFi();
+            void getWiFiCredentials();
+            String urlDecode(String str);
+            unsigned char h2int(char c);
+        #elif defined ESP32
+            void beginMeeo(String nameSpace, String accessKey, String ssid, String pass);
+            void beginMeeo(String nameSpace, String accessKey, Client & client);
             void setupAP();
             boolean testWiFi();
             void getWiFiCredentials();
