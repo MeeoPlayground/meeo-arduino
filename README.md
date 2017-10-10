@@ -27,6 +27,11 @@ If you are using an ESP8266-based board, in most cases you will need to install 
 * NodeMCU V2 Driver - for [Mac](https://github.com/jimaobian/CH34x_Install_V1.3) and for [Windows](https://github.com/nodemcu/nodemcu-devkit/tree/master/Drivers)
 * [Crowtail NodeMCU Driver](https://www.silabs.com/products/development-tools/software/usb-to-uart-bridge-vcp-drivers)
 
+## Installation
+
+Search and install the Meeo Library via the Library Manager inside the Arduino IDE. Go to `Sketch`->`Include Library`->`Manage Libraries...` then Search for *Meeo*.
+![Meeo Arduino - Arduino IDE Library Installation](https://res.cloudinary.com/circuitrocks/image/upload/v1507611043/meeo-arduino-arduino-ide-installation.png)
+
 ## Functions (API)
 * [`Meeo.begin(nameSpace, accessKey, [ssid], [pass])`](#function-begin)
 * [`Meeo.begin(nameSpace, accessKey, client)`](#function-begin-1)
