@@ -2,7 +2,7 @@
   RemoteApplianceControl by Meeo
 
   This example will make use of Meeo. If you haven't already,
-  visit Meeo at https://meeo.io and create an account. Then
+  visit Meeo at https://meeo.xyz and create an account. Then
   check how to get started with the Meeo library through
   https://github.com/meeo/meeo-arduino
 

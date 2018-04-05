@@ -1,6 +1,6 @@
 /*
     Arduino Library for Meeo
-    https://meeo.io
+    https://meeo.xyz
 
     MIT License
 

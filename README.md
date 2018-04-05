@@ -1,6 +1,6 @@
 ![Meeo for Arduino](https://res.cloudinary.com/circuitrocks/image/upload/v1494252922/meeo-arduino-banner_rll8rv.jpg)
 # Meeo for Arduino
-This library lets you connect your Arduino to your [Meeo](https://meeo.io) dashboard, and to your other devices through [Meeo](https://meeo.io) server.
+This library lets you connect your Arduino to your [Meeo](https://meeo.xyz) dashboard, and to your other devices through [Meeo](https://meeo.xyz) server.
 
 ## Compatible Hardware
 This library is tested to be used on the following board:
