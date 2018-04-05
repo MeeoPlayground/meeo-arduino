@@ -27,7 +27,7 @@
 #include "Meeo.h"
 
 // Meeo server defaults
-String mqttServer = "mq.meeo.io";
+String mqttServer = "mq.meeo.xyz";
 int mqttPort = 1883;
 MeeoCore Meeo;
 
