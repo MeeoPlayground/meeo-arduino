@@ -42,7 +42,7 @@ static void _callbackHandler(char * topic, uint8_t * payload, unsigned int paylo
 void (* _dataReceivedHandler)(String, String) = NULL;
 
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined (ESP32)
     WiFiServer server(80);
     WiFiClient espClient;
     PubSubClient pubSubClient(espClient);
@@ -63,6 +63,11 @@ void (* _dataReceivedHandler)(String, String) = NULL;
 #ifdef ESP8266
     void MeeoCore::begin(String nameSpace, String accessKey, String ssid, String pass) {
         meeo_log(F("Board detected: ESP8266"));
+        beginMeeo(nameSpace, accessKey, ssid, pass);
+    }
+#elif defined ESP32
+    void MeeoCore::begin(String nameSpace, String accessKey, String ssid, String pass) {
+        meeo_log(F("Board detected: ESP32"));
         beginMeeo(nameSpace, accessKey, ssid, pass);
     }
 #elif defined __AVR
@@ -157,32 +162,47 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
 
 //Private Methods
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined (ESP32)
     void MeeoCore::beginMeeo(String nameSpace, String accessKey, String ssid, String pass) {
         this->_nameSpace = nameSpace;
         this->_accessKey = accessKey;
 
-        uint8_t mac[WL_MAC_ADDR_LENGTH];
-        WiFi.softAPmacAddress(mac);
-        String macID = "";
-
-        for (int i = 0; i < WL_MAC_ADDR_LENGTH; i++) {
-          if (mac[i] < 10) {
-              macID += "0" + String(mac[i], HEX);
-          } else {
-              macID += String(mac[i], HEX);
-          }
-        }
-
-        macID.toUpperCase();
-        String AP_NameString = "Meeo-" + macID;
-        _macAddress = AP_NameString;
-
         this->_event = WIFI_CONNECTING;
         this->_meeoEventHandler(this->_event);
 
-        WiFi.begin(ssid.c_str(), pass.c_str());
+        meeo_log(F("Connecting to WiFi with the following credentials..."));
+        meeo_log("SSID: " + ssid);
+        meeo_log("PASS: " + pass);
+
+        if (ssid.equalsIgnoreCase("")) {
+            WiFi.begin();
+        } else {
+            WiFi.begin(ssid.c_str(), pass.c_str());
+        }
+
         if (!testWiFi()) {
+            String macID = "";
+
+            #ifdef ESP8266
+                uint8_t mac[WL_MAC_ADDR_LENGTH];
+                WiFi.softAPmacAddress(mac);
+
+                for (int i = 0; i < WL_MAC_ADDR_LENGTH; i++) {
+                  if (mac[i] < 10) {
+                      macID += "0" + String(mac[i], HEX);
+                  } else {
+                      macID += String(mac[i], HEX);
+                  }
+                }
+            #elif ESP32
+                macID = WiFi.macAddress();
+                macID.replace(":", "");
+                meeo_log(macID);
+            #endif
+
+            macID.toUpperCase();
+            String AP_NameString = "Meeo-" + macID;
+            _macAddress = AP_NameString;
             server.begin();
             this->_listenForClient = true;
             this->_event = WIFI_DISCONNECTED;
@@ -229,7 +249,7 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
     }
 #endif
 
-#ifdef ESP8266
+#if defined(ESP8266) || defined (ESP32)
     void MeeoCore::setupAP() {
         WiFi.mode(WIFI_AP);
         WiFi.softAP(_macAddress.c_str());
@@ -274,7 +294,7 @@ void _callbackHandler(char * topic, uint8_t * payload, unsigned int payloadLengt
                 _ssid = tempssid;
                 _pass = temppass;
 
-                meeo_log(F("Trying to configure WiFi credentials..."));
+                meeo_log(F("Trying to configure WiFi..."));
                 meeo_log("SSID: " + _ssid);
                 meeo_log("PASS: " + _pass);
 

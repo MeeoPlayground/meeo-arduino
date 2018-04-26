@@ -31,12 +31,12 @@
 // runtime logs from the library
 #define DEBUG_MEEO
 
-
-
 #include <Arduino.h>
 
 #ifdef ESP8266
     #include <ESP8266WiFi.h>
+#elif defined ESP32
+    #include <WiFi.h>
 #elif defined __AVR
     #include <Client.h>
 #else
@@ -59,7 +59,7 @@ typedef enum meeoEventType {
 
 class MeeoCore : public Print {
     public:
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined (ESP32)
             void begin(String nameSpace, String accessKey, String ssid = "", String pass = "");
         #elif defined __AVR
             void begin(String nameSpace, String accessKey, Client & client);
@@ -89,7 +89,7 @@ class MeeoCore : public Print {
         boolean _listenForClient = false;
         String _loggerChannel;
 
-        #ifdef ESP8266
+        #if defined(ESP8266) || defined (ESP32)
             void beginMeeo(String nameSpace, String accessKey, String ssid, String pass);
             void setupAP();
             boolean testWiFi();
